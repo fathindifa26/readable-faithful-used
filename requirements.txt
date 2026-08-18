@@ -1,0 +1,14 @@
+# Local analysis scripts (pipeline/*/analyze*.py) -- CPU is enough
+numpy
+pandas
+scipy
+scikit-learn
+sentence-transformers   # only needed by 08_probe_causal_dissociation/lexical_baseline.py
+
+# Kaggle notebooks (pipeline/*/*.ipynb) -- GPU, run these on Kaggle/Colab
+torch
+transformers
+accelerate
+safetensors
+sentencepiece
+huggingface_hub

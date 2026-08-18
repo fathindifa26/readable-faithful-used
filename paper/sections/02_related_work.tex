@@ -1,0 +1,75 @@
+\section{Related Work}
+\label{sec:related}
+% ------------------------------------------------------------
+% Sumber: §13.7 (sweep 4 penjuru + verdict NARROWED), §13.7.5 (grup Sap),
+% literatures/00_daftar.md. Struktur: 4 kelompok + posisi kita.
+% ------------------------------------------------------------
+
+\paragraph{LLMs as survey simulators (the ground-truth side).}
+``Silicon sampling'' was introduced by \citet{argyle2023} and has since
+been contested on multiple grounds: response instability and
+survey-format sensitivity \citep{dominguez2024, rottger2024}, systematic
+divergence from human samples \citep{bisbee2024}, and bounded persona
+effects \citep{hucollier2024}. SubPOP \citep{subpop2025} fine-tunes LLMs
+to predict per-group response distributions with a KL objective,
+achieving strong in-distribution accuracy but degraded transfer to unseen
+surveys. Rectification methods
+\citep{rectification2025} combine limited human data with synthetic
+responses. Cultural-alignment work compares model \emph{outputs} to
+cross-national survey structure---GlobalOpinionQA against World Values
+Survey and Pew Global Attitudes items \citep{globalopinions2023}, and
+ChatGPT responses against Hofstede's culture dimensions
+\citep{culturalalign2023}. All
+of these treat the model as a black box; none examines internal
+representations.
+
+\paragraph{Reading opinions from inside (the closest neighbor).}
+\citet{llmopinions2026} show linear probes on internal activations recover
+per-group opinion distributions \emph{better than the model's own
+generated outputs}, extract activations down to individual attention
+heads, and steer outputs by patching SAE features. Crucially, all of
+their measurement is \emph{first-order}: each group's read-out is scored
+against that group's own distribution. Whether the \emph{inter-group
+geometry} at any location mirrors real inter-group opinion structure---the
+property every neighbor-borrowing and generalization application depends
+on---is never computed.\footnote{Verified against the authors' released
+repository as of 2026-08-13; to be re-checked against the camera-ready
+before submission.} Our work is the second-order complement: probe accuracy
+is a phone book (accurate per entry); we ask whether the entries are
+\emph{arranged as a map}.
+% PRE-SUBMIT (sudah di checklist paper/README.md): verifikasi versi
+% camera-ready llm-opinions masih tanpa analisis geometri/RSA sebelum
+% submit -- klaim "never computed" di paragraf ini bergantung padanya.
+
+\paragraph{Localizing social attributes (the interpretability side).}
+\citet{kimevans2025} localize political ideology to attention heads and
+validate against legislator vote-based scores (DW-NOMINATE)---the closest
+methodological relative, for one attribute and elite text.
+\citet{personalocal2025} localize persona representations without external
+ground truth. Per-layer RSA has been applied to LLMs for other content
+domains \citep{assoc2026}. ``Diversity collapse'' \citep{divcollapse2026}
+documents that social-identity representations become less separable with
+depth---consistent with our anisotropy findings---but does not measure
+fidelity to real opinion structure. Construct-validity critiques of
+persona prompting \citep{constructvalidity2026} motivate our multi-cue
+design.
+
+\paragraph{The behavioral Sim2Real gap (the motivation side).}
+The Sap-group program documents, from the outside, that LLM simulators are
+homogeneous and overly cooperative: 451-human comparisons show the best of
+31 simulators reaches only USI 76.0 vs.\ a 92.7 human baseline
+\citep{sim2real2026}, and OdysSim \citep{odyssim2026} attributes the gap
+to helpfulness-driven post-training and rebuilds a behavioral foundation
+model to close it---while explicitly noting that better \emph{average}
+human simulation does not imply faithful \emph{subpopulation} simulation.
+Persona effects on moral stances are strongest for political ideology and
+personality \citep{socratic2025}, an output-level hierarchy that parallels
+our representation-level fidelity ranking. Foundational annotation work
+\citep{socialchem2020,annotators2022} established that human judgments are
+distributions conditioned on who answers---the premise of our entire
+evaluation. None of this line opens the model.
+
+\paragraph{Our position.} We supply the missing bridge: internal geometry
+(interpretability's territory) scored against population ground truth
+(simulation's territory), localized systematically, with the causal
+follow-up of whether the model \emph{uses} what it faithfully encodes.

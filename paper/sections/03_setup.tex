@@ -1,0 +1,89 @@
+\section{Setup: Two Maps and a Ruler}
+\label{sec:setup}
+% ------------------------------------------------------------
+% Sumber: notebook 07/09, simple_notes/1 (tahap0), finding 00_daftar.
+% Semua notasi didefinisikan di sini sekali, dipakai seterusnya.
+% ------------------------------------------------------------
+
+\subsection{Ground truth: inter-group opinion distances from Pew ATP}
+% group_real_dist
+We use OpinionQA-style per-group response distributions derived from Pew
+American Trends Panel waves \citep{opinionqa2023, subpop2025} (15 waves;
+inventory and preprocessing in Appendix~\ref{app:data}). A \emph{group} is an intersectional cell: a pair
+of demographic attribute values (e.g., \textit{race=Asian $\times$
+religion=Hindu}), yielding $169$ cells across six attribute types
+(AGE$\times$POLPARTY, EDUCATION$\times$INCOME, RACE$\times$RELIG,
+RACE$\times$POLPARTY, RACE$\times$POLIDEOLOGY, RELIG$\times$POLPARTY).
+For groups $i,j$ the ground-truth distance is the mean Wasserstein
+distance between their answer distributions over shared questions
+(up to 300 sampled per pair):
+\begin{equation}
+D^{\mathrm{real}}_{ij} \;=\; \frac{1}{|Q_{ij}|}\sum_{q\in Q_{ij}}
+\wdist\!\big(p_i^{(q)},\, p_j^{(q)}\big),
+\end{equation}
+where $p_i^{(q)}$ is group $i$'s real response distribution on question
+$q$'s ordinal scale. $D^{\mathrm{real}}$ is the survey-side RDM.
+Appendix~\ref{app:dreal-sens} reports sensitivity of the headline results
+to two construction choices: normalising WD by each question's scale
+range, and restricting to questions answered by every cell of a type.
+
+\subsection{Model-side representations at 1{,}089 locations}
+% notebook 09: residual 33, heads 32x32, mlp 32; hook o_proj input
+For each group we build identity prompts and extract, at the final token,
+(i) the residual stream after every layer ($33$ locations), (ii) each
+attention head's output before the out-projection
+($32\times32=1{,}024$ locations; the same read point used by
+\citealp{llmopinions2026}), and (iii) each FFN block output ($32$
+locations), from Mistral-7B \citep{mistral7b}. The causal experiments of
+Sec.~\ref{sec:gap} use activation patching in the tradition of causal
+tracing and circuit analysis \citep{meng2022rome, wang2023ioi}, following
+current methodological guidance \citep{heimersheim2024}. The model-side RDM at
+location $\ell$ uses cosine distances between group representations.
+
+\subsection{Multi-cue prompts}
+% 4 template + Tmean; jawaban ke kritik construct-validity
+A single prompt template is a single operationalization of ``group
+identity'' \citep{constructvalidity2026}. We therefore use four templates
+per group (third-person declarative, first-person, structured profile,
+and QA format ending in \texttt{Answer:}---the read-out position validated
+by \citealp{llmopinions2026}) and additionally a template-averaged
+representation (\textsc{Tmean}). Template disagreement is reported as a
+fragility diagnostic.
+
+\subsection{Fidelity: second-order comparison}
+% RSA: Spearman antar dua RDM, DALAM-tipe (pelajaran finding 02)
+Fidelity at location $\ell$ for attribute type $t$ is the Spearman
+correlation between the upper triangles of the two RDMs restricted to
+type-$t$ cells:
+\begin{equation}
+\rrho_{\ell,t} \;=\; \mathrm{Spearman}\!\Big(
+\big\{D^{\mathrm{real}}_{ij}\big\}_{i<j\in t},\;
+\big\{D^{\ell}_{ij}\big\}_{i<j\in t}\Big).
+\end{equation}
+We report within-type fidelity throughout: pooled correlations mix
+between-type scale differences and can both mask weak types and
+manufacture spurious gains (Sec.~\ref{sec:act1}).
+
+\subsection{Statistical protection against selection}
+\label{sec:setup-selection}
+% finding 06: max-stat permutation, held-out template, split-half
+Any ``best location'' claim over $1{,}089$ candidates inflates under
+selection (winner's curse). We therefore report three corrections:
+(a) \textbf{max-statistic permutation tests} \citep{nichols2002}---the
+null distribution of the \emph{maximum} $\rrho$ over all locations under
+cell-label permutation; (b) \textbf{held-out-template selection}---locations chosen
+on three templates, scored on the fourth; (c) \textbf{split-half
+selection}---locations chosen on half the cells, scored on the other half
+(200 resamples). Headline numbers are held-out values, not selected
+maxima.
+
+Two further disciplines apply to the causal experiments
+(Sec.~\ref{sec:gap}). First, patching items are \emph{clustered}: each
+type contributes 12 donor--recipient pairs $\times$ 20 questions, and
+items within a pair share the persona and its idiosyncrasies. All causal
+$p$-values are therefore computed at the \emph{pair} level (sign-flip
+permutation over 12 clusters, enumerated exactly), with item-level
+statistics shown only as descriptive detail. Second, because the
+survey-side ruler could itself be confounded by lexical similarity of the
+identity words, Sec.~\ref{sec:act2} reports fidelity after partialling
+out a lexical-baseline RDM.

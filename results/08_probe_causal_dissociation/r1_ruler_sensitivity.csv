@@ -1,0 +1,7 @@
+ruler,causal,rho,p
+split-half,t@L11,0.257,0.623
+split-half,t@win,-0.771,0.072
+partial-lexical,t@L11,0.486,0.329
+partial-lexical,t@win,-0.086,0.872
+held-out-template,t@L11,0.029,0.957
+held-out-template,t@win,-0.771,0.072

@@ -1,0 +1,121 @@
+% ============================================================
+% PAPER 1 — "Know + the Use-gap"
+% Roadmap: notes/research_question/04_pivot3_representation_fidelity.md §13.9
+% ------------------------------------------------------------
+% TEMPLATE: sementara pakai article standar biar bisa dikompilasi di mana
+% saja (Overleaf/lokal). Saat venue sudah dipilih, ganti 3 baris pertama
+% dengan style file venue (iclr20XX.sty / acl.sty / neurips_20XX.sty) —
+% struktur section & konten tidak perlu berubah.
+% ============================================================
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}      % tabel rapi
+\usepackage{graphicx}
+\graphicspath{{figures/}}  % figur di-generate: paper/figures/make_figures.py
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage[numbers]{natbib}
+\usepackage{url}           % \path{...} untuk file path panjang yang bisa di-wrap
+
+% --- cegah teks meluber ke margin kanan: izinkan TeX melar sedikit saat baris
+%     mepet (mengatasi overfull kecil-menengah di prosa tanpa efek kelihatan) ---
+\setlength{\emergencystretch}{3em}
+
+% --- makro TODO: semua yang belum final ditandai merah, gampang di-grep ---
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+\newcommand{\pending}[1]{\textcolor{orange}{[PENDING NB12+: #1]}}
+
+% --- notasi konsisten di seluruh paper ---
+\newcommand{\rdm}{\mathrm{RDM}}
+\newcommand{\rrho}{\rho}
+\newcommand{\wdist}{\mathrm{WD}}
+\newcommand{\starhead}{L11\,H16}
+
+% Judul final dipilih 2026-08-18 setelah finding 10v2/11 (riwayat &
+% rasional: sections/00_title_options.tex). Dua kandidat lama gugur karena
+% terbantah data sendiri ("Rarely Used", "Used in Proportion to Fidelity").
+\title{Readable, Faithful, Used:\\
+Three Dissociable Properties of Demographic Identity\\
+in a Language Model}
+
+% Afiliasi final 2026-08-19: Independent Researcher + ORCID.
+% \href supaya ORCID bisa diklik; kalau style venue punya field ORCID
+% sendiri, pindahkan ke sana saat ganti template.
+\author{Fathin Difa Robbani\\
+Independent Researcher\\
+\small ORCID: \href{https://orcid.org/0009-0000-6184-8919}{0009-0000-6184-8919}}
+
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+% Ditulis ulang 2026-08-18 (review D1): ~250 kata, satu angka headline per
+% hasil; statistik kausal = versi cluster-robust (pair-level).
+Large language models are widely used to simulate survey respondents, yet
+their answers are homogeneous and unfaithful to real inter-group
+differences. We ask where demographic group identity lives inside an LLM,
+how faithfully its internal geometry mirrors real inter-group opinion
+structure, and whether the model uses what it encodes. Using
+representational similarity analysis against Pew American Trends Panel
+ground truth over 169 intersectional demographic cells, we score 1{,}089
+read-out locations in Mistral-7B, then intervene causally at every layer
+in all six attribute types. Four results. (1) The standard last-token
+residual read-out understates the model: attention-head read-outs
+dominate it in five of six types and never lose, with selection-corrected
+fidelity up to $\rrho=0.63$ (split-half median)---roughly $70\%$ of the
+measurement-reliability ceiling---and the map survives partialling out
+the lexical similarity of the identity words. (2) A single head
+(\starhead) is significantly faithful in all six types as a fixed
+location, while race-based types stay weak and prompt-fragile everywhere.
+Both phenomena replicate at family-specific addresses---the analogous
+head significant in five of six types, weakest on the same race
+type---across three checkpoints of a second model family, where ten
+billion tokens of human-simulation training barely move the map.
+(3) Causal use does not follow fidelity: under cluster-robust inference
+the clearest causal pathway sits in one of the \emph{least} faithful
+types (exact $p=0.002$ at the faithful depth), the most faithful type
+shows no detectable effect, and replacing the entire identity in the
+prompt moves predictions by under $2\%$ of their error. (4) A
+128-dimensional probe of the single head lands $22$--$30\%$ closer to
+survey truth than the model's own answers---yet recovers almost none of
+the per-question ordering of groups, no better than the answers
+themselves. Readable, faithfully arranged, and causally used are three
+dissociable properties of the same model; treating them as one claim is
+what keeps the ``can LLMs simulate populations'' debate unresolved.
+\end{abstract}
+
+\input{sections/01_introduction}
+\input{sections/02_related_work}
+\input{sections/03_setup}
+\input{sections/04_act1_naive_readout}
+\input{sections/05_act2_fidelity_map}
+\input{sections/06_gap}
+\input{sections/07_robustness}
+\input{sections/08_discussion}
+\input{sections/09_limitations}
+
+\section*{Reproducibility Statement}
+All experiments use the public checkpoint \texttt{mistralai/Mistral-7B-v0.1}
+(fp16), prompts and preprocessing fully specified in
+Appendix~\ref{app:data}--\ref{app:templates}, and fixed seeds (42
+throughout; permutation analyses additionally state their counts).
+Ground truth derives from public, aggregated Pew American Trends Panel
+response distributions in the OpinionQA/SubPOP format
+\citep{opinionqa2023, subpop2025}; no individual-level data are
+redistributed. GPU work ran on freely available 2$\times$T4 instances;
+all statistics and figures regenerate from released CSVs via included
+scripts (analysis code and a figure generator accompany the repository,
+which we will release publicly upon publication).
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\appendix
+\input{sections/10_appendix}
+
+\end{document}

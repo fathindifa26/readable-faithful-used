@@ -1,0 +1,67 @@
+\section{Robustness and Generality}
+\label{sec:robustness}
+Sensitivity analyses reported in the main text: multi-template fragility
+(Sec.~\ref{sec:act2}), selection- and cluster-corrected statistics
+throughout (Sec.~\ref{sec:setup-selection}), the lexical-baseline control
+(Sec.~\ref{sec:lexical}), reliability ceilings
+(Appendix~\ref{app:reliability}), survey-ruler sensitivity
+(Appendix~\ref{app:dreal-sens}), and the identity-swap ceiling on an
+instruction-tuned model (Sec.~\ref{sec:ceiling}). This section adds the
+external check: a cross-model replication.
+% GSS (cross-institution) diputuskan DIHAPUS 2026-08-19 -> future work di
+% Limitations. Kalau mau dihidupkan lagi: fixed-location test di starhead
+% + full re-discovery lawan jarak antar-kelompok versi GSS.
+
+\subsection{Cross-model: the map phenomenon replicates, and simulation training barely moves it}
+\label{sec:crossmodel}
+% Sumber: finding 12 (notebook 15 + analisis_lokal/robustness_map.py).
+% Angka: notebooks/output/15_robustness_osim_kaggle/analisis/*.csv
+We replicate the fidelity-map measurements on three architecturally
+identical checkpoints that differ only in human-simulation training
+\citep{odyssim2026}: Qwen3-8B-Base, OSim-8B-Mid (midtrained on a
+10B-token behavioral corpus), and OSim-8B (post-RL)---identical prompts,
+cells, and analysis pipeline, with the pipeline itself validated by
+reproducing the Mistral map from raw activations. Four results:
+
+\begin{enumerate}
+  \item \textbf{Heads dominate the residual stream in a second model
+        family.} In all six types, at all three checkpoints, the best
+        head read-out exceeds the best residual read-out; held-out
+        magnitudes closely track Mistral's under the same pipeline
+        (e.g., RELIG$\times$POLPARTY $0.56$ vs.\ Mistral's $0.44$;
+        RACE$\times$RELIG $0.29$ vs.\ $0.30$).
+  \item \textbf{The type hierarchy replicates, including the race
+        weakness.} Five of six types pass max-statistic correction at
+        every checkpoint ($p\le0.0025$); the one failure is the same
+        type every time---RACE$\times$RELIG ($p=0.06$--$0.15$)---which
+        was also Mistral's weakest. Shallow, fragile racial-identity
+        structure is a cross-family property, not a Mistral quirk.
+  \item \textbf{A general demographic-geometry head exists here too, at
+        a family-specific address.} Head L33\,H9, held fixed across all
+        six types and all three checkpoints, scores $\rrho=0.35$--$0.58$
+        in five types (per-location permutation $p\le0.002$) and---like
+        \starhead{} in Mistral---is weakest exactly on
+        RACE$\times$RELIG ($0.22$--$0.25$). The same provenance caveat
+        applies symmetrically: L33\,H9 was noticed as one type's winner,
+        so its selection-free evidence is its scores on the other five
+        types, stable across checkpoints. The \emph{address} is
+        family-specific (late-stack here, mid-stack in Mistral); the
+        \emph{phenomenon} is not.
+  \item \textbf{Ten billion tokens of behavioral simulation training
+        barely change either the map or the mouth.} Base $\to$ post-RL
+        held-out fidelity moves by $-0.07$ to $+0.09$ per type with no
+        systematic direction; output-side accuracy (mean WD to truth)
+        changes by $\le0.03$, and output-RDM fidelity improves by $0.04$
+        on average. Training aimed at realistic \emph{interaction
+        behavior} neither sharpens nor destroys the demographic-opinion
+        geometry---consistent with the OdysSim authors' own caution that
+        better average-human simulation does not imply better
+        subpopulation simulation.
+\end{enumerate}
+
+What does \emph{not} yet replicate across families is the causal side:
+the patching experiments (Sec.~\ref{sec:gap}) have only been run on
+Mistral, so the map--use dissociation remains a one-model result. Output
+measurements for the two post-trained checkpoints use the same raw-text
+prompts as the base model for comparability, which is off-distribution
+for them; their output-side numbers carry that caveat.

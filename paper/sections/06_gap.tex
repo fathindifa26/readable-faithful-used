@@ -1,0 +1,515 @@
+\section{Causal Use Is Real, Small, and Not Where Fidelity Is Highest}
+\label{sec:gap}
+% ------------------------------------------------------------
+% Sumber: finding 07 (weak instrument) + 08 (strong instrument, 3 tipe)
+% + 09/11 (sweep 6 tipe) + 10v2 (probe). Judul lama "Causal Use Tracks
+% Fidelity" DIGANTI: klaim itu gugur di 6 tipe (Sec. sweep).
+% ------------------------------------------------------------
+
+\subsection{The output is nearly identity-invariant under natural prompting}
+\label{sec:ceiling}
+% finding 07: full-sentence swap ceiling + D1-D2 — SUDAH FINAL
+Before asking whether any internal location causally drives answers, we
+measure the ceiling: how much does the model's predicted opinion
+distribution move when the \emph{entire} demographic identity in the
+prompt is replaced? Averaged over pairs and questions, the answer is
+almost not at all: $\wdist(\hat{p}_A, p^{\mathrm{real}}_B) -
+\wdist(\hat{p}_B, p^{\mathrm{real}}_B) \approx 0.004$ against a total
+prediction error of ${\sim}0.37$ (${<}2\%$). One illustrative item (not
+an aggregate statistic): on a question where 18--29-year-olds and
+50--64-year-olds differ by 11 percentage points in reality, swapping the
+full persona moves the model's prediction by 1.7 points---${\sim}15\%$ of
+that item's real difference.
+
+Worse, the small variation that does exist is directionally
+uninformative: the prediction for group $A$ is \emph{no closer} to $A$'s
+own ground truth than to another group's (median advantage
+$\approx0$; sign test ${\approx}$ coin flip in 2 of 3 tested types).
+The model produces slightly-different-but-equally-wrong answers per
+persona. % D2
+
+\paragraph{Not an artifact of the base-model interface.} We re-measured
+the identity-swap ceiling on Mistral-7B-Instruct-v0.2 under its own chat
+template, with the same cells and questions (40 per type, all same-type
+cell pairs; under this estimator the base model's swap movement is
+$3.2\%$ of its total error, rather than the ${<}2\%$ above, which is
+computed on the original question set). The near-invariance replicates:
+the instruct model's full-identity swap moves predictions by $3.9\%$ of
+its total error. What chat tuning changes is accuracy and direction, not
+identity-dependence: absolute error nearly doubles (mean $\wdist$
+$0.66$ vs.\ $0.37$), while the small movement becomes reliably
+directionally correct (group $A$'s prediction closer to $A$'s own truth
+than to $B$'s in $64\%$ of pairs; sign test $p<0.001$ in all six types,
+vs.\ three of six for the base model). An instruction-tuned model is
+slightly more identity-responsive and substantially less accurate; the
+near-invariance itself is a property of the model family, not of the
+raw-completion interface. The letter-probability read-out is still
+assumed (see Limitations).
+
+\subsection{A weak instrument finds nothing---but has no dynamic range to find it with}
+% finding 07 (v1): sudah final, jangan diubah
+Patching \starhead{} activations between group prompts (donor$\to$base) at
+the \emph{prediction} token, with 1--3 heads at natural scale, moves
+nothing (protocol in Appendix~\ref{app:patching}). But the ceiling above shows this
+instrument had essentially no dynamic range to begin with---any causal
+effect this small would be undetectable regardless of whether it exists.
+
+\subsection{A properly strong instrument reveals a real but small effect}
+\label{sec:v2}
+% finding 08 (v2): FINAL. Ini subbab paling penting di Act 3.
+We therefore repeat the intervention with an instrument matched in
+strength to prior successful steering work \citep{llmopinions2026}:
+identity is localized to a single answer token in a QA-formatted
+demographic block (rather than spread across a sentence), the patch is
+applied \emph{at that identity token} (allowing propagation to all
+subsequent tokens, not just the prediction token), all 32 heads of layer
+11 are patched jointly (not 1--3), and questions are selected for maximal
+real inter-group disagreement rather than at random. Under this
+instrument, the result is neither a flat null nor a clean success. Across
+the three types tested here it is \textbf{graded}, and---suggestively---the
+gradation lines up with each type's fidelity from Sec.~\ref{sec:act2}.
+Sec.~\ref{sec:sweep} extends the experiment to all six types and shows
+that this alignment does \emph{not} generalise; we present the three-type
+result first because it is the strongest single demonstration that the
+effect exists at all:
+
+\begin{table}[h]
+\centering
+\caption{Causal patching results with the strong instrument. Ceiling =
+mean full-prompt-swap shift, measured as in Sec.~\ref{sec:ceiling} on
+this instrument's question set. Shift = mean directional
+shift toward the target group's true distribution; \% of ceiling in
+parentheses where meaningful. $p_{\text{item}}$ = Wilcoxon vs.\
+random-head control over 240 items (descriptive; items are clustered);
+$p_{\text{pair}}$ = exact sign-flip over the 12 pairs (primary).}
+\label{tab:patchv2}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lccccc}
+\toprule
+Type (split-half fidelity) & Ceiling & 32 heads @ L11 & Single \starhead{} & $p_{\text{item}}$ (32h) & $p_{\text{pair}}$ (32h) \\
+\midrule
+AGE$\times$POLPARTY ($0.63$)   & $+0.0165$ & $+0.0067$ (41\%) & $-0.0001$ (n.s.) & $0.0027$ & $0.019$ \\
+RELIG$\times$POLPARTY ($0.52$) & $+0.0020$ & $+0.0034$ (170\%, n.s.) & $-0.0004$ (n.s.) & $0.16$ & $0.15$ \\
+RACE$\times$RELIG ($0.21$)     & $+0.0026$ & $+0.0017$ (n.s.) & $\mathbf{-0.0005}$ (wrong dir., $p_{\text{pair}}{<}1/4096$) & $0.31$ & $0.29$ \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+Three findings from this table, in order of importance:
+
+\begin{enumerate}
+  \item \textbf{The highest-fidelity type shows a real, correctly-directed
+        causal effect.} For AGE$\times$POLPARTY, jointly patching all 32
+        heads at layer 11 shifts predictions toward the target group's
+        true distribution: $59\%$ of trials move in the correct direction
+        (vs.\ $32\%$ under a random-head control), recovering $41\%$ of
+        the achievable ceiling. Because the 240 items cluster into 12
+        pairs, the primary test is an exact pair-level sign-flip:
+        $p_{\text{pair}}=0.019$ (adding layer 18: $0.016$)---evidence,
+        but marginal, and it does not survive a Holm correction over the
+        family of 24 tests behind this table (3 types $\times$ 4
+        conditions $\times$ 2 comparisons). Identity is therefore
+        \emph{plausibly} load-bearing at this depth; the sweep below
+        provides the localisation---independent of the layer-11
+        hypothesis, though computed on the same pairs. (Whether any load-bearing
+        follows from the map's fidelity is a separate question, and
+        Sec.~\ref{sec:sweep} answers it in the negative.)
+  \item \textbf{The lowest-fidelity type shows no correct effect, and a
+        single-head intervention actively backfires.} For
+        RACE$\times$RELIG, the 32-head patch is not significant
+        ($p_{\text{pair}}=0.29$), while patching \starhead{} \emph{alone}
+        shifts predictions in the \emph{wrong} direction with the most
+        consistent effect in the table (worse than the random-head
+        control in essentially every pair; pair-level $t=-5.2$,
+        $p_{\text{pair}}<1/4096$, the permutation resolution). Replacing
+        128 dimensions mid-computation is a destructive intervention, so
+        we ran a donor-control experiment on the same pairs and questions
+        (independent run; the effect itself replicates, pair-level
+        $t=-2.4$, exact $p=0.005$). It rules out the simplest corruption
+        story. A \emph{dimension-shuffled} donor---the target group's own
+        vector with its 128 head dimensions permuted, so the location,
+        norm, and coordinate statistics match while the structure is
+        destroyed---perturbs the output \emph{twice} as strongly in raw
+        movement, yet produces no systematic drift at all (pair-level
+        $t=-0.1$): if harm merely scaled with disruption, this condition
+        would be the most harmful, and it is the least. The consistent
+        away-from-truth drift appears only with a \emph{coherent identity
+        donor}. Whether it further requires the \emph{paired} group's
+        donor is suggestive but unsettled: donors from other same-type
+        identities trend the same way weakly (each n.s.), and the direct
+        paired contrast against their mean reaches $t=-2.0$, exact
+        $p=0.073$. The safe reading is therefore sharper than before: the
+        backfire is not generic corruption---it is carried by identity
+        content---but single-unit intervention at an apparently faithful
+        location remains unreliable in direction.
+  \item \textbf{Fidelity and single-unit causal sufficiency are
+        dissociable.} \starhead{} alone never produces a correct,
+        significant shift in \emph{any} type (AGE: n.s.; RELIG: n.s.;
+        RACE: significant but wrong-directed); a correct effect (where it
+        exists) requires the joint action of all 32 heads at the layer.
+        The same head can be faithful as a representation while being
+        insufficient---or actively misleading---as a sole intervention
+        target.
+\end{enumerate}
+
+\paragraph{Amplification backfires.} Scaling the patch by $5\times$
+(matching the amplification levels used in SAE-feature steering,
+\citealp{llmopinions2026}) makes the shift \emph{negative} in all three
+types (condition not shown in Table~\ref{tab:patchv2}; full results in
+Appendix~\ref{app:patching}). Linear extrapolation in raw activation space likely
+pushes representations off-manifold, unlike steering in a constrained SAE
+feature space---amplifying a raw signal is not a free strengthening
+operation.
+
+\subsection{Where identity causally enters---and why it is not where fidelity is highest}
+\label{sec:sweep}
+% Sumber: finding 09 (notebook 13) + finding 11 (notebook 14 Part B).
+% Koreksi max-stat sign-flip 2000x, SATU run/seed utk keenam tipe:
+% notebooks/output/14_.../sweep_all6_maxstat.csv + fixed_layer_L11_L1.csv
+Section~\ref{sec:v2} localises a correct causal effect at layer 11 for one
+type and finds none there for another. That leaves the diagnosis
+incomplete in two ways: a type may have a causal locus the layer-11
+hypothesis simply looked past, and three types are too few to tell whether
+causal use follows fidelity at all. We therefore replace the
+hypothesis-driven probe with an exhaustive one---the same 32-head
+identity-token intervention applied at \emph{every} layer---and run it for
+all six attribute types.
+
+\paragraph{Procedure.} For each pair--question item we assemble a single
+batch of 33 copies of the prompt: one patched at each of the 32 layers,
+plus one patched at a randomly chosen layer as a control, so all
+conditions see identical inputs and one forward pass answers the whole
+sweep ($n{=}240$ pair--question items per type). The statistic per layer
+is the paired $t$ of its directional shift against the random-layer
+control. Two selection problems require correction. First, the winner is
+selected from 32 candidate layers, so we apply a max-statistic permutation
+correction \citep{nichols2002}, with the same sign flip applied across all
+layers to preserve the between-layer correlation structure. Second, and
+more consequentially, the 240 items are \emph{clustered} into 12 pairs
+(Sec.~\ref{sec:setup-selection}), so all primary $p$-values below flip
+signs at the \emph{pair} level: per-pair mean shifts, all $2^{12}$ flip
+combinations enumerated exactly. Item-level statistics are shown as
+descriptive detail only---treating the 240 items as independent
+understates the $p$-values several-fold.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{fig_causal_sweep}
+\caption{Causal effect of patching all 32 heads of each layer in turn, at
+the identity token ($n{=}240$ pair--question items per type).
+\emph{Descriptive} view: bars are the item-level paired $t$ of the
+directional shift toward the target group's true distribution against a
+random-layer control; the dashed line is the item-level max-statistic
+noise ceiling. Inference in the text and Table~\ref{tab:sweep} is
+cluster-robust (sign flips at the level of the 12 pairs), which is
+substantially more conservative. Two loci recur descriptively---mid-stack
+(L8--L15) and layer 1---and which one a type leans on is not predicted by
+how faithful its map is.}
+\label{fig:sweep}
+\end{figure}
+
+\begin{table}[h]
+\centering
+\caption{Per-layer patching sweep, all six types. Fidelity = split-half
+median (one estimator used consistently; see text for sensitivity).
+Item-level columns are descriptive ($t$ over 240 items; max-statistic $p$
+over 32 layers); the primary inference is the pair-level max-statistic
+$p$ (sign flips over 12 pairs, exact) and the pair-level $p$ at the
+a-priori locus L11 (no layer selection). The item-level and pair-level
+winning layers can differ (e.g.\ RACE$\times$RELIG: L1 vs.\ L8), since
+averaging within pairs reweights the evidence. Output ceiling = mean
+shift from replacing the entire identity.}
+\label{tab:sweep}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lcccccccc}
+\toprule
+& & \multicolumn{3}{c}{item-level (descriptive)} & \multicolumn{3}{c}{pair-level (primary)} & \\
+\cmidrule(lr){3-5}\cmidrule(lr){6-8}
+Type & Fidelity & Win layer & $t$ & $p_{\max}$ & $t_{\text{win}}$ & $p_{\max}$ & $t$@L11 $\rightarrow$ $p$ & Out.\ ceiling \\
+\midrule
+RACE$\times$POLIDEOLOGY  & $0.30$ & L11 & $4.55$ & $0.0005$ & $3.22$ & $0.066$ & $\mathbf{3.22 \rightarrow 0.0020}$ & $0.0176$ \\
+RACE$\times$RELIG        & $0.21$ & L1  & $4.10$ & $0.0005$ & $2.94$ (L8) & $0.122$ & $0.68 \rightarrow 0.27$ & $0.0026$ \\
+AGE$\times$POLPARTY      & $0.63$ & L15 & $3.31$ & $0.0150$ & $2.37$ (L14) & $0.266$ & $1.93 \rightarrow 0.022$ & $0.0165$ \\
+RELIG$\times$POLPARTY    & $0.52$ & L8  & $2.94$ & $0.0355$ & $2.58$ (L8) & $0.210$ & $1.11 \rightarrow 0.15$ & $0.0020$ \\
+EDUCATION$\times$INCOME  & $0.58$ & L9  & $2.47$ & $0.1425$ & $1.57$ (L15) & $0.822$ & $0.75 \rightarrow 0.23$ & $0.0194$ \\
+RACE$\times$POLPARTY     & $0.52$ & L14 & $2.40$ & $0.1770$ & $2.00$ (L4) & $0.524$ & $1.28 \rightarrow 0.11$ & $0.0032$ \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\paragraph{What survives cluster-robust inference.} The pair-level
+statistics are deliberately conservative (12 clusters per type), and they
+prune the picture sharply. No type survives the pair-level max-statistic
+correction (best: RACE$\times$POLIDEOLOGY, $p=0.066$)---an honest
+statement that with 12 pairs we cannot both search 32 layers and certify
+the winner. The a-priori test at L11 (no layer selection; L11 was fixed
+by Sec.~\ref{sec:act2}) is where the clean result lives:
+RACE$\times$POLIDEOLOGY at L11 reaches $t=3.22$, exact $p=0.0020$, the
+only entry that also survives a Bonferroni correction over the 12
+fixed-location tests below. AGE$\times$POLPARTY at L11 ($p=0.022$, and
+independently $p=0.019$ in the targeted experiment of
+Sec.~\ref{sec:v2}---the same pairs, so convergent rather than
+independent evidence) is suggestive but not conclusive. Descriptively,
+the item-level loci cluster in two places---mid-stack (L8--L15) and
+layer~1---but we flag one asymmetry the table would otherwise hide:
+\textbf{L1 was noticed in the first sweep, which included
+RACE$\times$RELIG}, so for that type (and only that type) the L1 column
+below is not selection-free; its pair-level $p=0.016$ should be read
+with that caveat, and the ``early-layer hub'' reading stays a hypothesis
+for the cross-model replication. For the three types added later, both
+columns are genuinely fixed in advance:
+
+\begin{table}[h]
+\centering
+\caption{Fixed-location causal test, pair-level (exact sign-flip over 12
+pairs, one-sided). L11 was fixed by Sec.~\ref{sec:act2} before any
+sweep. L1 was
+noticed in the first sweep, whose data included the three types in the
+lower block---for the upper block L1 is a genuinely pre-registered
+location; for the lower block it is not, and RACE$\times$RELIG@L1 in
+particular is partially selection-inflated. Bonferroni for the 12 tests
+is $0.0042$; the single bold entry survives it.}
+\label{tab:fixedlayer}
+\begin{tabular}{lcccc}
+\toprule
+Type & $t$ @ L11 & $p_{\text{pair}}$ & $t$ @ L1 & $p_{\text{pair}}$ \\
+\midrule
+\multicolumn{5}{l}{\emph{types not in the sweep that suggested L1:}} \\
+RACE$\times$POLIDEOLOGY  & $\mathbf{3.22}$ & $\mathbf{0.0020}$ & $-0.74$ & $0.77$ \\
+RACE$\times$POLPARTY     & $1.28$ & $0.114$ & $1.97$ & $0.033$ \\
+EDUCATION$\times$INCOME  & $0.75$ & $0.234$ & $1.24$ & $0.123$ \\
+\midrule
+\multicolumn{5}{l}{\emph{types that were in that sweep (L1 column not selection-free):}} \\
+AGE$\times$POLPARTY      & $1.93$ & $0.022$ & $0.34$ & $0.386$ \\
+RELIG$\times$POLPARTY    & $1.11$ & $0.150$ & $1.46$ & $0.089$ \\
+RACE$\times$RELIG        & $0.68$ & $0.267$ & $2.46$ & $0.016$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Fidelity does not predict causal use.} The natural hypothesis
+after Sec.~\ref{sec:v2}---that a faithful map is the map the model
+actually uses, so causal strength should track fidelity---does not
+survive the extension to six types. Across types, the rank correlation
+between fidelity (split-half median) and pair-level causal strength is
+nowhere significantly positive: $+0.26$ against $t$ at the a-priori
+locus L11 ($p=0.62$) and $-0.77$ against $t$ at each type's own best
+layer ($p=0.07$). The same holds under every other fidelity estimator we
+have---held-out template ($+0.03$ and $-0.77$) and the lexical-partial
+fidelity of Sec.~\ref{sec:lexical} ($+0.49$, $p=0.33$, and
+$-0.09$)---so the conclusion is not an artifact of estimator choice. With $n{=}6$ these correlations are weakly
+powered either way (Figure~\ref{fig:dissoc}); what carries the weight is
+the pattern of the two extreme types, which we test \emph{directly}
+rather than by comparing significance verdicts \citep{gelman2006}:
+
+\begin{itemize}
+  \item \textbf{The top-fidelity types show no detectable causal locus,
+        under every estimator of ``top''.} Which type is most faithful
+        depends on the ruler: EDUCATION$\times$INCOME under split-half
+        and held-out template, AGE$\times$POLPARTY and
+        RELIG$\times$POLPARTY under the lexical-partial control, where
+        EDUCATION$\times$INCOME drops to fifth
+        (Sec.~\ref{sec:lexical}). The conclusion is the same under all
+        three. EDUCATION$\times$INCOME---with the largest output ceiling
+        ($0.0194$) and the largest raw shift of any type at any layer
+        ($+0.0118$ at L9)---has no layer approaching significance under
+        cluster-robust correction ($p=0.82$), because the shift is
+        inconsistent across pairs; RELIG$\times$POLPARTY has none either
+        (L11 $p=0.15$; best layer $p=0.21$ after max-statistic
+        correction). Tested head-to-head at L11 against
+        RACE$\times$POLIDEOLOGY: the bootstrap 95\% CI for
+        $t_{\text{EDU}} - t_{\text{RACE$\times$PI}}$ is
+        $[-6.6, -0.4]$, excluding zero (two-sample pair-permutation
+        $p=0.065$); for
+        $t_{\text{RELIG$\times$PP}} - t_{\text{RACE$\times$PI}}$
+        it is $[-5.6, +0.1]$ ($p=0.12$)---real but not airtight
+        differences, and we state them at that strength. Failing our
+        threshold is not itself evidence of absence; the direct
+        comparisons are what license the contrast.
+  \item \textbf{A low-fidelity type has the clearest causal locus.}
+        RACE$\times$POLIDEOLOGY, whose map is among the weakest
+        ($0.30$ split-half, $0.41$ held-out template), is the single
+        result that survives everything we throw at it: $t=3.22$ at L11,
+        exact pair-level $p=0.0020$, surviving Bonferroni, recovering
+        $42\%$ of its ceiling---at the faithful depth, in a type whose
+        map there is poor.
+\end{itemize}
+
+Representational fidelity is therefore not what decides whether identity
+is causally used: the clearest causal pathway sits in a type that is
+near the bottom under every fidelity estimator, the top-fidelity types
+show nothing detectable under any of them, and the direct contrasts are
+at worst borderline. The graded pattern of
+Sec.~\ref{sec:v2} was real within those three types but does not
+generalise; we report it as the coincidence it turned out to be.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{fig_fidelity_vs_causal}
+\caption{Representational fidelity (split-half median) against
+cluster-robust causal strength (pair-level $t$), one point per attribute
+type. Left: at the a-priori locus L11 (filled = exact pair-level
+$p<0.05$). Right: at each type's own best layer (filled = survives the
+pair-level max-statistic correction; none does). If the model used its
+faithful map to answer, these panels would slope upward; they do not.}
+\label{fig:dissoc}
+\end{figure}
+
+\paragraph{Magnitude misleads; consistency decides.} Three separate times
+in this sweep the layer with the largest raw shift fails correction while
+a smaller, steadier layer passes: RELIG$\times$POLPARTY (L12/L11 largest,
+L8 passes), RACE$\times$RELIG (L7 $+0.0030$ and L10 $+0.0026$ fail, L1
+passes at $+0.0010$), and EDUCATION$\times$INCOME (largest shift in the
+paper, nothing passes at either clustering level). Reporting mean effect
+sizes without a selection-and-cluster-corrected variance test would have
+produced three wrong localisations here.
+
+\paragraph{Control sensitivity.} The random-layer control can itself land
+on a causally relevant layer, deflating measured effects; and
+``shift'' is defined against the unpatched baseline prediction, so a
+no-patch reference exists implicitly. Re-running every pair-level test
+against zero instead of against the control changes no conclusion (e.g.,
+RACE$\times$POLIDEOLOGY@L11: $t=3.24$, $p=0.0022$ vs.\ zero; full table
+in the released analysis code).
+
+\paragraph{Caveats.} Four, stated plainly. (i) Absolute effects are small
+throughout ($0.001$--$0.012$), commensurate with output ceilings that are
+themselves small; the surviving effect is statistically robust, not
+practically large. (ii) Most loci were \emph{discovered} by the sweep
+rather than predicted, so they warrant replication in a second model
+(Sec.~\ref{sec:robustness})---though the fixed-location test in
+Table~\ref{tab:fixedlayer} is free of per-type selection. (iii) With six
+types, any cross-type correlation is weakly powered; our claim rests on
+the two counterexamples, not on the correlation coefficient. (iv) What
+layer 1 encodes mechanistically remains open: a check on already-collected
+residual streams was inconclusive because the layer-0 read-out is
+degenerate in our prompt design (the final token is shared across cells),
+so we cannot contrast layer 1 against pure embeddings; layers 1 and 2 are
+near-identical in geometry ($\rrho=0.90$) and both differ appreciably from
+layer 11 ($\rrho=0.78$). We record this as an open question rather than a
+claim (Sec.~\ref{sec:limitations}).
+
+\subsection{How much is recoverable by direct read-out?}
+\label{sec:probe}
+% Sumber: finding 10 v2 (notebook 14 Part A + fitting lokal).
+% Angka: notebooks/output/14_.../probe_v2_summary.csv, probe_v2_grouprank.csv,
+% grouprank_noise_ceiling.csv
+The causal experiments ask whether the model \emph{uses} what it encodes.
+The complementary question is how much is there to use: if we read the
+faithful location directly instead of letting the answer come out of the
+model's mouth, how much closer to survey truth do we get?
+
+\paragraph{Procedure.} For every (cell, question) pair we collect the
+activation at the opinion-answer position and fit a ridge probe (128 PCA
+components) to predict the group's \emph{real} response distribution.
+Evaluation is leave-one-cell-out: the probe is always scored on a
+demographic cell it never saw, and the regularisation strength is chosen
+inside the training fold. We read three locations---the full layer 11
+($4{,}096$ dims), the single head \starhead{} ($128$ dims), and layer 1
+($4{,}096$ dims)---and compare against two references: the model's own
+answer distribution (``the mouth''), and a group-blind baseline that
+predicts the mean real distribution of the \emph{other} cells on that
+question. Broad-coverage questions are used throughout ($250$ questions
+per type, each answered by at least $60\%$ of that type's cells;
+$33{,}395$ rows in total), which is what the earlier, narrower question
+set could not support.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{fig_probe}
+\caption{Left: distance to survey truth (Wasserstein, lower is better) for
+the model's own answer, probes read from the faithful location, and a
+group-blind baseline built from other cells' real answers. Right: how much
+of the true per-question group \emph{ordering} each read-out recovers
+(mean per-question Spearman across cells, half-split evaluation; error
+bars are standard errors), against the reliability ceiling of the metric
+given survey sampling noise.}
+\label{fig:probe}
+\end{figure}
+
+\paragraph{Reading the map beats listening to the mouth---by a lot, and
+not because of calibration.}
+In all six types the probe is substantially closer to survey truth than
+the model's own answer: $0.300 \to 0.211$ for AGE$\times$POLPARTY,
+$0.352 \to 0.275$ for RACE$\times$RELIG, $22$--$30\%$ closer overall, and
+better on $65$--$68\%$ of individual items. A natural objection is that
+the ridge probe simply learns the right output \emph{scale} while the
+letter-probability read-out is miscalibrated. We test it: fitting a
+single temperature parameter to the mouth on each training fold barely
+helps ($0.300\to0.298$ for AGE; fitted $T\approx0.6$--$1.25$ across
+types), leaving the probe's margin intact. This reproduces, against real
+survey ground truth and at a location we localised ourselves, the core
+claim that internal states are more informative than generated answers
+\citep{llmopinions2026}. Two details sharpen it:
+
+\begin{itemize}
+  \item \textbf{The single head suffices---and this is not a bottleneck
+        artifact.} \starhead{} alone---$128$ dimensions, one
+        thirty-second of the layer---matches or beats the PCA-reduced
+        full-layer read-out in four of six types (e.g.,
+        RACE$\times$RELIG $0.261$ vs.\ $0.275$), and an
+        \emph{unreduced} ridge on all $4{,}096$ layer-11 dimensions is
+        \emph{worse} than both ($0.234$--$0.303$), so the head's
+        advantage is not an artifact of compressing the competition. One
+        framing caution, though: because the gain turns out to be
+        question-level rather than group-level (below), what this
+        establishes is that \starhead{} carries the \emph{usable
+        question-conditioning signal} of the layer in very few
+        dimensions---it is not, by itself, a confirmation of the
+        group geometry of Sec.~\ref{sec:act2}.
+  \item \textbf{Layer 1 is not readable, although it is (descriptively)
+        causal.} The L1 probe performs at or below the mouth
+        ($0.279$--$0.358$)---even for RACE$\times$RELIG, the type whose
+        only surviving causal trace sits at layer 1
+        (Sec.~\ref{sec:sweep}, with the selection caveat given there).
+        Together with the converse case (the most faithful mid-stack maps
+        carrying no detectable causal effect), this points to a double
+        dissociation between what can be read out and what drives the
+        answer.
+\end{itemize}
+
+\paragraph{But the gain is question-level, not group-level.} A blunt
+control changes the reading. A baseline that ignores the group entirely
+and predicts the mean real distribution of the other cells on that
+question beats every read-out we have, by a wide margin ($0.133$ vs.\
+$0.211$ for AGE$\times$POLPARTY; $0.135$ vs.\ $0.234$ for
+EDUCATION$\times$INCOME). Whatever the probe recovers is therefore mostly
+about the question, not about who is answering it.
+
+We test that directly. For each question we rank the cells by the mean
+opinion each read-out predicts and correlate that ranking with the true
+one, averaging over questions. To avoid an artifact---leave-one-out
+predictions are anti-correlated with the held-out cell by
+construction---this test uses a half-split design: fit on half the cells,
+predict every cell of the other half with the same model, evaluate within
+that half, ten repetitions with halves swapped.
+
+The result is a flat null for everything. The probe recovers a group
+ordering correlation of $+0.02$ to $+0.07$; the model's own answers
+recover $+0.06$ to $+0.11$---slightly \emph{more} than the probe in all
+six types. The metric itself is not the limitation: simulating two
+independent survey samples of the same size from each cell gives a
+reliability ceiling of $+0.81$ to $+0.86$, so both read-outs sit at
+$7$--$13\%$ of what is achievable (Figure~\ref{fig:probe}, right).
+
+\paragraph{Reconciling this with the fidelity map.} These two results
+measure different resolutions and are consistent. Sec.~\ref{sec:act2}
+scores the geometry of
+group representations \emph{aggregated over hundreds of questions}: at
+that resolution the arrangement genuinely mirrors survey structure
+($\rrho$ up to $0.63$ held-out). This section scores per-item group
+discrimination: at that resolution the signal is near zero. The precise
+statement the evidence supports is therefore narrower than
+``the model knows the groups'': \emph{the model holds a group map that is
+faithful on average, and that map is not sharp enough to say who answers
+what on any particular question.}
+
+\paragraph{What this means practically.} If the goal is a per-group
+opinion distribution, reading $128$ dimensions of one attention head is
+markedly better than asking the model---but still worse than simply using
+other groups' real answers to the same question. Probing the internal map
+is not, on this evidence, a substitute for survey data; it is a better
+read-out of a model whose group information remains too coarse for
+item-level simulation.

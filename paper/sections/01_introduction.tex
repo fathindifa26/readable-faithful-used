@@ -1,0 +1,104 @@
+\section{Introduction}
+\label{sec:intro}
+% ------------------------------------------------------------
+% Sumber: §13.1-13.3, §13.8.3, simple_notes/2 & 3.
+% Alur: (1) hook Sim2Real gap, (2) dua literatur berhenti satu langkah
+% sebelum jembatan, (3) pertanyaan kita, (4) tiga lapis, (5) kontribusi.
+% ------------------------------------------------------------
+
+% --- Paragraf 1: hook — simulasi survei LLM itu dipakai orang, tapi outputnya homogen
+LLMs are increasingly deployed as simulated survey respondents and human
+simulators \citep{subpop2025,odyssim2026}. Yet a growing body of
+behavioral evidence shows their outputs are excessively uniform: simulated
+users are ``overly agreeable'' and ``stylistically uniform''
+\citep{sim2real2026}, opinion predictions barely differentiate demographic
+groups, and general model capability does not predict simulation fidelity
+\citep{sim2real2026}. All of this evidence is \emph{behavioral}---measured
+from the outside. Whether the failure lives in what the model
+\emph{knows} or in what it \emph{uses} has remained open, because the two
+research communities each hold only half of the required instrumentation.
+
+% --- Paragraf 2: dua literatur, masing-masing setengah alat (analogi MRI/kuesioner)
+Interpretability work localizes demographic and persona information inside
+models---down to individual attention heads \citep{llmopinions2026,
+kimevans2025}---but validates against the model's own behavior (probe
+accuracy, steering success), never against external population ground
+truth. LLM-survey-simulation work has exactly that ground truth (real
+per-group response distributions) but treats the model as a black box.
+One community runs the brain scan but never administers the
+questionnaire; the other administers the questionnaire but never looks
+inside the head. The experiment that requires both instruments at
+once---does the internal arrangement of groups match how those groups
+actually answer?---sits in the gap between them, and had not been run.
+
+% --- Paragraf 3: pertanyaan riset + instrumen
+We hold both instruments at once. For 169 intersectional demographic
+cells (e.g., \textit{Asian $\times$ Hindu}, \textit{age 18--29 $\times$
+Democrat}) we compute two representational dissimilarity matrices: one
+from real Pew ATP response distributions (Wasserstein distances between
+groups' answers), one from the model's internal representations at a given
+location, and correlate them (RSA; \citealp{kriegeskorte2008}). Applied at
+1{,}089 locations $\times$ 4 prompt operationalizations, this yields a
+\emph{fidelity map}: where inside the model does the arrangement of
+demographic groups mirror how the groups actually differ in opinion?
+
+% --- Paragraf 4: tiga lapis (tesis utama)
+Our results split the question ``can LLMs simulate populations?'' into
+three separable properties (we reserve the word ``layer'' for transformer
+layers):
+\begin{enumerate}
+  \item \textbf{Readable} (established by prior work): per-group opinion
+        distributions can be decoded from internal activations
+        \citep{llmopinions2026}.
+  \item \textbf{Faithfully arranged} (this work): at specific locations
+        ---most strikingly a single attention head, \starhead---the
+        \emph{inter-group geometry} mirrors real opinion structure
+        (selection-corrected $\rrho$ up to $0.63$), something per-group
+        readability neither implies nor requires.
+  \item \textbf{Actually used} (this work): the faithfully arranged
+        information barely flows into the model's answers---full identity
+        swaps in the prompt move predictions by ${<}2\%$ of their error,
+        and not directionally toward the target group's truth. A
+        strong-instrument intervention does find a real causal pathway,
+        but where it is clearest is \emph{not} where the map is most
+        faithful (Sec.~\ref{sec:sweep}).
+\end{enumerate}
+
+% --- Paragraf 5: kontribusi eksplisit
+\paragraph{Contributions.}
+\begin{itemize}
+  \item The first \emph{fidelity map} of demographic identity in an LLM:
+        RDM-vs-RDM comparison against real survey ground truth across
+        layers, attention heads, FFN outputs, and prompt variants, with
+        winner's-curse-corrected statistics (max-statistic permutation,
+        held-out-template and split-half validation).
+  \item Identification of \starhead{} as a general demographic-geometry
+        head, significant across all six attribute types as a
+        \emph{fixed} location; and the finding that fidelity is sharply
+        heterogeneous---political/socio-economic structure is deeply
+        encoded, racial$\times$religious structure is weak and
+        prompt-fragile at every location tested.
+  \item Quantification of the knowledge--behavior gap: replacing the
+        entire prompt identity moves the model's predicted distribution
+        by under $2\%$ of its prediction error in aggregate (a single
+        illustrative item is worked in Sec.~\ref{sec:gap}), and the
+        residual variation is directionally uninformative. A causal sweep
+        over all 32 layers in all six types---with cluster-robust,
+        selection-corrected inference---shows that representational
+        fidelity does not predict causal use: the clearest pathway sits in
+        a low-fidelity type, and the most faithful type shows no
+        detectable pathway at all.
+  \item A direct measurement of what a faithful read-out buys: a probe on
+        \starhead{} alone (128 dimensions) is $22$--$30\%$ closer to
+        survey truth than the model's own answers, but recovers almost no
+        per-question group ordering---so first-order readability,
+        second-order fidelity, and item-level group discrimination come
+        apart from one another.
+  \item A reframing with practical consequences. If faithful structure
+        already exists internally, surface fine-tuning \citep{subpop2025}
+        may re-teach what the model already encodes---a candidate
+        mechanism for its known transfer failure. Reading the faithful
+        location directly is then the cheaper alternative, though our
+        probe results show it is still not a substitute for survey data
+        (Sec.~\ref{sec:probe}).
+\end{itemize}

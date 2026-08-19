@@ -40,7 +40,7 @@ identity-dependence: absolute error nearly doubles (mean $\wdist$
 $0.66$ vs.\ $0.37$), while the small movement becomes reliably
 directionally correct (group $A$'s prediction closer to $A$'s own truth
 than to $B$'s in $64\%$ of pairs; sign test $p<0.001$ in all six types,
-vs.\ three of six for the base model). An instruction-tuned model is
+vs.\ three of six at $p<0.05$, one at $p<0.001$, for the base model). An instruction-tuned model is
 slightly more identity-responsive and substantially less accurate; the
 near-invariance itself is a property of the model family, not of the
 raw-completion interface. The letter-probability read-out is still
@@ -90,7 +90,7 @@ Type (split-half fidelity) & Ceiling & 32 heads @ L11 & Single \starhead{} & $p_
 \midrule
 AGE$\times$POLPARTY ($0.63$)   & $+0.0165$ & $+0.0067$ (41\%) & $-0.0001$ (n.s.) & $0.0027$ & $0.019$ \\
 RELIG$\times$POLPARTY ($0.52$) & $+0.0020$ & $+0.0034$ (170\%, n.s.) & $-0.0004$ (n.s.) & $0.16$ & $0.15$ \\
-RACE$\times$RELIG ($0.21$)     & $+0.0026$ & $+0.0017$ (n.s.) & $\mathbf{-0.0005}$ (wrong dir., $p_{\text{pair}}{<}1/4096$) & $0.31$ & $0.29$ \\
+RACE$\times$RELIG ($0.21$)     & $+0.0026$ & $+0.0017$ (n.s.) & $\mathbf{-0.0005}$ (wrong dir., $p_{\text{pair}}{=}1/4096$) & $0.31$ & $0.29$ \\
 \bottomrule
 \end{tabular}%
 }
@@ -127,7 +127,8 @@ Three findings from this table, in order of importance:
         shifts predictions in the \emph{wrong} direction with the most
         consistent effect in the table (worse than the random-head
         control in essentially every pair; pair-level $t=-5.2$,
-        $p_{\text{pair}}<1/4096$, the permutation resolution). Replacing
+        $p_{\text{pair}}=1/4096$, the resolution floor of the exact
+        permutation). Replacing
         128 dimensions mid-computation is a destructive intervention, so
         we ran a donor-control experiment on the same pairs and questions
         (independent run; the effect itself replicates, pair-level
@@ -310,21 +311,27 @@ the pattern of the two extreme types, which we test \emph{directly}
 rather than by comparing significance verdicts \citep{gelman2006}:
 
 \begin{itemize}
-  \item \textbf{The top-fidelity types show no detectable
+  \item \textbf{The top-fidelity types show no correction-surviving
         \emph{single-layer} causal locus, under every estimator of
         ``top''.} Which type is most faithful
-        depends on the ruler: EDUCATION$\times$INCOME under split-half
-        and held-out template, AGE$\times$POLPARTY and
-        RELIG$\times$POLPARTY under the lexical-partial control, where
-        EDUCATION$\times$INCOME drops to fifth
-        (Sec.~\ref{sec:lexical}). The conclusion holds under all three.
+        depends on the ruler: AGE$\times$POLPARTY under the split-half
+        median (the estimator of Table~\ref{tab:sweep}),
+        EDUCATION$\times$INCOME under the held-out template, and
+        AGE$\times$POLPARTY with RELIG$\times$POLPARTY under the
+        lexical-partial control, where EDUCATION$\times$INCOME drops to
+        fifth (Sec.~\ref{sec:lexical}). The conclusion holds under all
+        three.
         EDUCATION$\times$INCOME---with the largest output ceiling
         ($0.0194$) and the largest raw shift of any type at any layer
         ($+0.0118$ at L9)---has no layer approaching significance under
         cluster-robust correction ($p=0.82$), because the shift is
         inconsistent across pairs; RELIG$\times$POLPARTY has none either
         (L11 $p=0.15$; best layer $p=0.21$ after max-statistic
-        correction). Tested head-to-head at L11 against
+        correction); AGE$\times$POLPARTY, the split-half leader,
+        reaches only the suggestive $p=0.022$ at L11 that fails every
+        correction applied in this section (pair-level max-statistic
+        $p=0.27$; the Holm family of Sec.~\ref{sec:v2}). Tested
+        head-to-head at L11 against
         RACE$\times$POLIDEOLOGY: the bootstrap 95\% CI for
         $t_{\text{EDU}} - t_{\text{RACE$\times$PI}}$ is
         $[-6.6, -0.4]$, excluding zero (two-sample pair-permutation
@@ -356,7 +363,8 @@ composition fixed across cells---each cell is averaged over the same
 question set, the questions answered by every cell of its type, since
 coverage is only ${\ge}60\%$ per cell and unmatched subsets would
 themselves contribute inter-cell distance. The resulting RDM is
-near-perfectly reliable (split-half $\rrho=0.98$--$0.99$, above the
+near-perfectly reliable (split-half $\rrho=0.98$--$0.99$ in the five
+types with enough all-cell-shared questions to split, above the
 identity-only side's $0.72$--$0.94$), so what follows is a property of
 the representation, not of measurement noise.
 
@@ -516,9 +524,11 @@ claim that internal states are more informative than generated answers
         question-conditioning signal} of the layer in very few
         dimensions---it is not, by itself, a confirmation of the
         group geometry of Sec.~\ref{sec:act2}.
-  \item \textbf{Layer 1 is not readable, although it is (descriptively)
-        causal.} The L1 probe performs at or below the mouth
-        ($0.279$--$0.358$)---even for RACE$\times$RELIG, the type whose
+  \item \textbf{Layer 1 is barely readable, although it is (descriptively)
+        causal.} The L1 probe stays far behind the L11 probe everywhere
+        ($0.279$--$0.358$; modestly better than the mouth in three
+        types, at or below it in the other three)---even for
+        RACE$\times$RELIG, the type whose
         only surviving causal trace sits at layer 1
         (Sec.~\ref{sec:sweep}, with the selection caveat given there).
         Together with the converse case (the most faithful mid-stack maps
@@ -550,8 +560,9 @@ $+0.07$, negative for RACE$\times$POLIDEOLOGY); the model's own answers
 recover $+0.06$ to $+0.11$---at least as much as either probe in all
 six types. The metric itself is not the limitation: simulating two
 independent survey samples of the same size from each cell gives a
-reliability ceiling of $+0.81$ to $+0.86$, so both read-outs sit at
-$7$--$13\%$ of what is achievable (Figure~\ref{fig:probe}, right).
+reliability ceiling of $+0.81$ to $+0.86$: the mouth sits at
+$7$--$13\%$ of what is achievable and the probes lower still
+($2$--$8\%$; Figure~\ref{fig:probe}, right).
 
 \paragraph{Reconciling this with the fidelity map.} These two results
 measure different resolutions and are consistent. Sec.~\ref{sec:act2}

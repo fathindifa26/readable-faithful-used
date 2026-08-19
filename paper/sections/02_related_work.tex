@@ -32,34 +32,54 @@ their measurement is \emph{first-order}: each group's read-out is scored
 against that group's own distribution. Whether the \emph{inter-group
 geometry} at any location mirrors real inter-group opinion structure---the
 property every neighbor-borrowing and generalization application depends
-on---is never computed.\footnote{Verified against the authors' released
-repository (\texttt{schang-lab/llm-opinions}) and the camera-ready
-description (ICLR 2026, OpenReview \texttt{kHVzEjThKE}): all four
-reported methods---linear probing, SAE feature analysis, SAE-based
-steering, and fine-tuning---are first-order, per-group comparisons; no
-inter-group RSA or distance-matrix analysis is described.} Our work is
+on---is not among their measurements.\footnote{Verified against the ICLR
+2026 camera-ready paper (OpenReview \texttt{kHVzEjThKE}) and the authors'
+released repository (\texttt{schang-lab/llm-opinions}): all four reported
+methods---linear probing, SAE feature analysis, SAE-based steering, and
+fine-tuning---are first-order, per-group comparisons; no inter-group RSA
+or distance-matrix analysis is described.} Our work is
 the second-order complement: probe accuracy
 is a phone book (accurate per entry); we ask whether the entries are
-\emph{arranged as a map}.
-% Verifikasi camera-ready 2026-08-19: dicek via repo GitHub resmi +
-% ringkasan hasil paper (bukan baca PDF OpenReview kata-per-kata, halaman
-% verifikasi bot memblokir akses langsung) -- 3 sumber independen konsisten
-% bilang metodenya first-order semua, tak ada RSA/distance-matrix. Kalau
-% mau 100% pasti: buka https://openreview.net/pdf?id=kHVzEjThKE manual,
-% Ctrl+F "RSA"/"dissimilarity"/"distance matrix"/"inter-group".
+\emph{arranged as a map}. Two output-side works come closest to that
+question and sharpen what remains open: \citet{personamanifold2026}
+correlate the separation of persona-conditioned final-layer embeddings and
+outputs with human subgroup disagreement, and \citet{beyondmarginals2026}
+test whether demographically aligned models reproduce the human
+item--item correlation structure beyond marginals---both compare
+behavioral or last-layer structure, not the geometry of internal
+representations against a human inter-group distance matrix. Layer-wise
+RSA of internal LLM geometry against human similarity structure exists
+for \emph{perceptual} domains, where alignment peaks mid-stack and fades
+with depth \citep{perceptualgeom2026}---strikingly parallel to what we
+find for demographic identity. To our knowledge, no prior work scores the
+internal inter-group geometry of demographic representations against real
+survey opinion structure.
+% Verifikasi camera-ready 2026-08-19: PDF OpenReview dibaca penuh langsung
+% oleh penulis (bukan lewat repo/ringkasan) -- dikonfirmasi first-order
+% semua, tak ada RSA/distance-matrix.
 
 \paragraph{Localizing social attributes (the interpretability side).}
 \citet{kimevans2025} localize political ideology to attention heads and
 validate against legislator vote-based scores (DW-NOMINATE)---the closest
-methodological relative, for one attribute and elite text.
+methodological relative, for one attribute and elite text; a follow-up
+line locates a single partisan axis at one mid-stack layer and steers
+along it \citep{partisandir2026}.
 \citet{personalocal2025} localize persona representations without external
-ground truth. Per-layer RSA has been applied to LLMs for other content
+ground truth, \citet{sociodemo2025} probe linear socio-demographic
+associations arising from indirect cues across layers, and
+\citet{personapatch2025} localize persona processing with activation
+patching---again without survey ground truth. Per-layer RSA has been applied to LLMs for other content
 domains \citep{assoc2026}. ``Diversity collapse'' \citep{divcollapse2026}
 documents that social-identity representations become less separable with
 depth---consistent with our anisotropy findings---but does not measure
 fidelity to real opinion structure. Construct-validity critiques of
 persona prompting \citep{constructvalidity2026} motivate our multi-cue
-design.
+design. Closest to our dissociation result,
+\citet{personaprefs2026} find preference machinery largely shared across
+personas---probes and steering vectors transfer between opposed
+personas---converging from the steering side with our finding that what a
+location encodes and what the model answers with are separable
+properties.
 
 \paragraph{The behavioral Sim2Real gap (the motivation side).}
 The Sap-group program documents, from the outside, that LLM simulators are

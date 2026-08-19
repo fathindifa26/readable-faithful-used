@@ -21,9 +21,10 @@ Multi-cue averaging alone already helps (RACE$\times$RELIG residual:
 $0.07$ single-template $\to0.27$ \textsc{Tmean}): part of the apparent
 weakness was operationalization noise. Figure~\ref{fig:layercurve} shows
 this is not a property of one lucky depth: the best head within a layer
-sits above that layer's residual stream at \emph{every} depth in all six
-types, and the FFN output tracks the residual stream rather than the
-heads. The information the standard read-out misses is thus already
+sits above that layer's residual stream at nearly every depth in all six
+types (the residual stream wins at three isolated layer--type points
+out of $186$), and the FFN output tracks the residual stream rather
+than the heads. The information the standard read-out misses is thus already
 present \emph{before} the per-head signals are projected and summed into
 the stream, consistent with dilution at that summation rather than with
 the model not encoding it.
@@ -34,7 +35,7 @@ the model not encoding it.
 \caption{Fidelity by depth and component (multi-cue \textsc{Tmean}
 read-out). Orange = best of the 32 heads within that layer, blue =
 residual stream at that layer, dashed green = FFN output. Dotted vertical
-line marks layer 11. Head read-outs dominate at every depth; the gap is
+line marks layer 11. Head read-outs dominate at nearly every depth; the gap is
 widest exactly in the types where the residual stream looks weakest
 (RELIG$\times$POLPARTY, RACE$\times$RELIG). Selected maxima here are
 uncorrected---see Table~\ref{tab:map} for held-out values.}
@@ -86,7 +87,7 @@ layers, and 1{,}024 \emph{random 128-dimensional projections} of the
 residual stream (32 per layer, fixed across folds). Held-out, heads win
 clearly in five of six types (e.g., RELIG$\times$POLPARTY: head $0.44$
 vs.\ residual $0.17$ vs.\ random projection $0.18$; RACE$\times$RELIG:
-$0.30$ vs.\ $0.16$ vs.\ $0.17$); random projections track the residual
+$0.29$ vs.\ $0.16$ vs.\ $0.17$); random projections track the residual
 stream, not the heads, so the head advantage is not a
 dimensionality artifact. The exception is EDUCATION$\times$INCOME, where
 the margin is thin ($0.54$ vs.\ $0.51$ vs.\ $0.49$): for that type the
@@ -189,9 +190,10 @@ column of Table~\ref{tab:map}; see that table for held-out values.}
 \subsection{Heterogeneity is a property of the model, not the read-out}
 % finding 02+05: hierarki bertahan; ras rapuh antar template
 The type hierarchy is preserved at every location tested:
-political/socio-economic structure is deeply and stably encoded
-(template std $0.02$--$0.05$), while every race-containing type is weaker
-\emph{and} prompt-fragile (template std $0.10$--$0.13$; e.g.,
+the age- and education-based types are deeply and stably encoded
+(template std $0.02$--$0.05$; RELIG$\times$POLPARTY sits between, at
+$0.10$), while every race-containing type is weaker
+\emph{and} prompt-fragile (template std $0.12$--$0.13$; e.g.,
 RACE$\times$RELIG at its best head: $\rrho=0.16$ under one template,
 $0.45$ under another). This parallels output-level findings that
 political ideology dominates persona effects \citep{socratic2025} and

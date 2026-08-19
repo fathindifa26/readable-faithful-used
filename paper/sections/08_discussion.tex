@@ -15,7 +15,7 @@ used}, is not a function of it. (We reserve the word ``layer'' for
 transformer layers throughout.) Under cluster-robust inference, causal
 use is not absent---one type shows a clear, Bonferroni-surviving pathway
 at L11, and two more are suggestive---but it does not follow the map: the
-most faithful type shows no detectable single-layer locus anywhere, the clearest
+most faithful type shows no correction-surviving single-layer locus anywhere, the clearest
 locus belongs to one of the \emph{least} faithful types, and the direct
 contrast between those two is itself at least borderline (bootstrap CI
 excluding zero; permutation $p=0.065$). The failure of natural-prompt
@@ -32,7 +32,7 @@ consistent with it: outputs vary little across personas overall
 slightly even under a deliberately strong instrument. What our results do
 \emph{not} support is the tempting explanation that simulation fails
 because the internal representation is poor---the type with the best
-internal map shows no detectable single-layer causal effect, while a
+internal map shows no correction-surviving single-layer causal effect, while a
 weakly-represented
 type shows the strongest. This suggests behavioral
 homogeneity is not one mechanism but at least two: insufficient causal
@@ -68,7 +68,7 @@ identity conditioning. (4) \textbf{Do not steer through a single apparently-fait
 without a corruption control}: the most consistent effect in our causal
 analysis is a \emph{harmful} one from doing exactly this
 (RACE$\times$RELIG, \starhead{} alone, wrong direction,
-$p_{\text{pair}}<1/4096$). A donor-control experiment
+$p_{\text{pair}}=1/4096$). A donor-control experiment
 (Sec.~\ref{sec:v2}) shows this is not generic corruption---a
 structure-destroyed donor perturbs the output harder and drifts
 nowhere---so the misdirection is carried by identity content, though its
@@ -77,7 +77,7 @@ certified. The practical warning is unchanged and now better grounded:
 fidelity of a location does not license single-unit intervention at
 it.
 (5) If a per-group distribution is what you need, read it rather than
-ask for it: a linear probe on \starhead{} alone lands $22$--$30\%$ closer
+ask for it: a linear probe on \starhead{} alone lands $21$--$31\%$ closer
 to survey truth than the model's own answers (Sec.~\ref{sec:probe}). But
 calibrate expectations---that same probe recovers almost none of the
 per-question ordering of groups, and a group-blind baseline built from

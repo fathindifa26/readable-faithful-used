@@ -89,8 +89,10 @@ This is the paper's core arc, and it reversed direction twice.
    (`08_probe_causal_dissociation`, finding 11): RACE×POLIDEOLOGY — one of
    the *least* faithful types on the Act 2 map — has the **strongest**
    causal locus of all six, at L11 (exact pair-level p=0.0005).
-   EDUCATION×INCOME — the *most* faithful type — has **no detectable
-   single-layer causal locus anywhere**, despite having the largest raw
+   EDUCATION×INCOME — the most faithful type under the held-out ruler
+   (AGE×POLPARTY leads under split-half, and fails every correction
+   too) — has **no correction-surviving single-layer causal locus
+   anywhere**, despite having the largest raw
    ceiling and output movement available to it. (Every patch here is
    applied at one layer, so redundant encoding across layers stays an
    alternative reading the paper states rather than rules out.) Spearman correlation between fidelity
@@ -101,9 +103,10 @@ This is the paper's core arc, and it reversed direction twice.
 5. **A probe/mouth dissociation** (finding 10, `08_probe_causal_dissociation`):
    a linear probe on L11 reads the map correctly (beats the model's own
    output in all six types, 22-30% closer to ground truth; L11H16 alone,
-   128 dimensions, matches the whole layer), but a group-identity-blind
-   baseline beats the probe too, and a per-question group-*ordering* test
-   sits near the noise floor (7-13% of ceiling). The map is readable, but
+   128 dimensions, matches the whole layer at 21-31%), but a
+   group-identity-blind baseline beats the probe too, and a per-question
+   group-*ordering* test sits near the noise floor (the mouth at 7-13%
+   of ceiling, the probes at 2-8%). The map is readable, but
    what makes the probe win is question calibration, not knowledge of
    which group is which.
 6. **The low-fidelity backfire is not a base-model interface artifact**

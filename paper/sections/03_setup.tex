@@ -37,7 +37,9 @@ attention head's output before the out-projection
 locations), from Mistral-7B \citep{mistral7b}. The causal experiments of
 Sec.~\ref{sec:gap} use activation patching in the tradition of causal
 tracing and circuit analysis \citep{meng2022rome, wang2023ioi}, following
-current methodological guidance \citep{heimersheim2024}. The model-side RDM at
+current methodological guidance \citep{heimersheim2024} and mindful
+of the documented reliability limits of causal probing interventions
+\citep{causalprobing2025}. The model-side RDM at
 location $\ell$ uses cosine distances between group representations.
 
 \subsection{Multi-cue prompts}

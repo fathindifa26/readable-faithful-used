@@ -25,12 +25,12 @@ types. Four headline results:
    context where the model answers, the same map is measurably weaker.
 2. **Causal use does not follow fidelity.** The strongest causal pathway
    into the model's output sits in one of the *least* faithful types
-   (exact p=0.002); the *most* faithful type has no detectable
+   (exact p=0.002); the *most* faithful type has no correction-surviving
    single-layer causal locus.
 3. Where a causal pathway exists for a low-fidelity type, it can move the
    output *away* from the truth — and a donor-control experiment shows
    this is carried by identity content, not generic activation corruption.
-4. A linear probe on the faithful head lands 22-30% closer to survey
+4. A linear probe on the faithful head lands 21-31% closer to survey
    truth than the model's own answers, yet cannot recover per-question
    group ordering — the map is readable without being usable that way.
 

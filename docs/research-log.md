@@ -184,7 +184,7 @@ type's output further from the truth in every diagnostic thrown at it.
 | Finding | Pipeline stage | Key result file in `results/` |
 |---|---|---|
 | 1-4 (Act 1) | `01_rsa_pilot`, `02_rsa_intersectional`, `03_lgroup_pilot` | `rsa_summary.csv`, `rsa_intersectional_summary.csv`, `pilot_summary.csv` |
-| 5-6 (Act 2, fidelity map) | `04_fidelity_map` | `peta_kesetiaan_full.csv`, `koreksi_seleksi/cek*.csv` |
+| 5-6 (Act 2, fidelity map) | `04_fidelity_map` | `fidelity_map_full.csv`, `selection_correction/check*.csv` |
 | 7-8 (patching v1/v2) | `05_patching_v1`, `06_patching_v2` | `patching_summary.csv`, `patching_v2_summary.csv` |
 | 9, 11 (sweep, dissociation) | `07_sweep_and_probe`, `08_probe_causal_dissociation` | `sweep_all6_maxstat.csv`, `causal_pairlevel_sweep.csv`, `causal_typediff_tests.csv` |
 | 10 (probe vs. mouth) | `08_probe_causal_dissociation` | `probe_v2_summary.csv`, `probe_v2_grouprank.csv` |

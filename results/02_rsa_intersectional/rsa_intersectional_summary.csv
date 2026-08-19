@@ -1,4 +1,4 @@
-jenis_pasangan,best_layer,rho,p_value,n_pairs
-beda_1_komponen,17,0.17438480675944193,0.0,719
-beda_2_komponen_tipe_sama,17,0.16724782931069337,0.0,1645
-beda_tipe_kombinasi,10,0.012474352816998881,0.0,11832
+pair_kind,best_layer,rho,p_value,n_pairs
+diff_1_component,17,0.17438480675944193,0.0,719
+diff_2_components_same_type,17,0.16724782931069337,0.0,1645
+diff_combination_type,10,0.012474352816998881,0.0,11832

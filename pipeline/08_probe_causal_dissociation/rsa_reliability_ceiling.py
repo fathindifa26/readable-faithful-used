@@ -1,17 +1,18 @@
-"""Review B3: reliability ceiling untuk klaim RSA utama (rho ~ 0.63).
+"""Review B3: reliability ceiling for the main RSA claim (rho ~ 0.63).
 
-"0.63 dari langit-langit 0.70" cerita yang beda banget dari "0.63 dari 0.95".
-Dua sumber noise yang membatasi:
+"0.63 out of a ceiling of 0.70" is a very different story from "0.63 out of
+0.95". Two sources of noise set the limit:
 
-1. SURVEI: tiap sel cuma n~132 responden -> RDM survei sendiri berisik.
-   Ukur: simulasikan 2 sampel survei independen per (sel, soal) sebesar
-   n_unweighted asli -> 2 RDM -> Spearman antar keduanya (10 ulangan).
-2. MODEL: RDM model berubah antar template. Ukur: split template 2v2
-   (3 pasangan kombinasi) di L11H16 & head terbaik per tipe -> Spearman
-   antar dua RDM belahan.
+1. SURVEY: each cell has only n~132 respondents -> the survey RDM is itself
+   noisy. Measure: simulate 2 independent survey samples per (cell, question)
+   of the original n_unweighted size -> 2 RDMs -> Spearman between them
+   (10 repetitions).
+2. MODEL: the model RDM changes across templates. Measure: 2v2 template splits
+   (3 combination pairs) at L11H16 and at the best head per type -> Spearman
+   between the two half RDMs.
 
-Langit-langit gabungan (attenuation) = sqrt(r_survei x r_model) --
-batas atas rho yang MUNGKIN diamati kalau model sempurna.
+Combined ceiling (attenuation) = sqrt(r_survey x r_model) -- the upper bound on
+the rho that COULD be observed even if the model were perfect.
 
 Output: notebooks/output/14_.../rsa_reliability.csv
 """
@@ -75,7 +76,7 @@ for ty in sorted(set(types)):
     cells = [keys[i] for i in idx]
     iu = np.triu_indices(m, 1)
 
-    # ---------- 1. reliabilitas RDM survei (split-half simulasi) ----------
+    # ---------- 1. survey RDM reliability (simulated split-half) ----------
     shared = {}
     for a in range(m):
         for b in range(a + 1, m):
@@ -108,7 +109,7 @@ for ty in sorted(set(types)):
         r_survey.append(spearmanr(D1, D2).statistic)
     r_survey = float(np.mean(r_survey))
 
-    # ---------- 2. reliabilitas RDM model (split template 2v2) ----------
+    # ---------- 2. model RDM reliability (2v2 template split) ----------
     def model_split_reliability(loc_fn):
         rs = []
         for t_a in combinations(range(4), 2):
@@ -120,7 +121,7 @@ for ty in sorted(set(types)):
 
     r_model_star = model_split_reliability(lambda E: E[idx, STAR_LAYER, STAR_HEAD, :])
 
-    # head terbaik tipe ini (Tmean, dari peta lama) -- cari cepat
+    # best head for this type (Tmean, from the old map) -- quick search
     Tm = emb.mean(0)
     flat = Tm[idx].reshape(m, 32 * 32, 128).transpose(1, 0, 2)
     flat = flat / (np.linalg.norm(flat, axis=2, keepdims=True) + 1e-8)
@@ -136,17 +137,17 @@ for ty in sorted(set(types)):
     ceil_best = float(np.sqrt(max(r_survey, 0) * max(r_model_best, 0)))
     obs_star = float(spearmanr(rdm_cos(Tm[idx, STAR_LAYER, STAR_HEAD, :]), y).statistic)
 
-    rows.append(dict(tipe=ty, n_sel=m,
-                     r_survei=r_survey, r_model_star=r_model_star,
+    rows.append(dict(type=ty, n_cells=m,
+                     r_survey=r_survey, r_model_star=r_model_star,
                      r_model_best=r_model_best,
                      ceiling_star=ceil_star, ceiling_best=ceil_best,
                      obs_star=obs_star, obs_best=float(rhos[best]),
                      pct_ceiling_star=obs_star / ceil_star if ceil_star > 0 else np.nan,
                      pct_ceiling_best=float(rhos[best]) / ceil_best if ceil_best > 0 else np.nan))
-    print(f"[{ty}] survei {r_survey:+.3f} | model H16 {r_model_star:+.3f} "
+    print(f"[{ty}] survey {r_survey:+.3f} | model H16 {r_model_star:+.3f} "
           f"-> ceiling {ceil_star:.3f} | obs H16 {obs_star:+.3f} "
-          f"({obs_star/ceil_star:.0%} dari ceiling)")
+          f"({obs_star/ceil_star:.0%} of the ceiling)")
 
 res = pd.DataFrame(rows)
 res.to_csv(f"{OUT}/rsa_reliability.csv", index=False)
-print("\ndisimpan -> rsa_reliability.csv")
+print("\nsaved -> rsa_reliability.csv")

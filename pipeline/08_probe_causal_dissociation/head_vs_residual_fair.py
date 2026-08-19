@@ -1,15 +1,15 @@
-"""Review B1: perbandingan head vs residual yang apple-to-apple.
+"""Review B1: an apple-to-apple comparison of head vs residual.
 
-Dua ketidakadilan yang dikoreksi:
-1. SELEKSI TAK SIMETRIS: "head best" dipilih dari 1.024 kandidat, "residual
-   best" dari 33 — tapi tabel tidak punya kolom residual HELD-OUT.
-   -> hitung residual held-out template (pilih layer di 3 template, ukur
-      di template ke-4, rata-rata 4 fold), sejajar dgn head held-out.
-2. DIMENSI & ANISOTROPI: head 128-dim vs residual 4.096-dim anisotropik.
-   -> kontrol: 1.024 PROYEKSI ACAK 128-dim dari residual stream
-      (32 proyeksi x 32 layer, mirror jumlah kandidat head). Kalau
-      max-atas-1024-proyeksi-acak menyamai max head, "heads dominate"
-      sebagian artefak geometri/seleksi, bukan isi.
+Two unfairnesses that get corrected:
+1. ASYMMETRIC SELECTION: "head best" is picked from 1,024 candidates,
+   "residual best" from 33 -- but the table has no HELD-OUT residual column.
+   -> compute a template-held-out residual (pick the layer on 3 templates,
+      measure on the 4th, average over 4 folds), parallel to the held-out head.
+2. DIMENSION & ANISOTROPY: a 128-dim head vs an anisotropic 4,096-dim residual.
+   -> control: 1,024 RANDOM 128-dim PROJECTIONS of the residual stream
+      (32 projections x 32 layers, mirroring the number of head candidates).
+      If the max over the 1024 random projections matches the head max, then
+      "heads dominate" is partly a geometry/selection artefact, not content.
 
 Output: notebooks/output/14_.../head_vs_residual_fair.csv
 """
@@ -50,7 +50,7 @@ def clean_subset(idx):
 
 
 def rdm_rows(X):
-    """X (n_loc, n_cell, d) -> jarak cosine (n_loc, n_pair)."""
+    """X (n_loc, n_cell, d) -> cosine distances (n_loc, n_pair)."""
     Xn = X / (np.linalg.norm(X, axis=2, keepdims=True) + 1e-8)
     S = np.einsum("lcd,lkd->lck", Xn, Xn)
     iu = np.triu_indices(X.shape[1], 1)
@@ -67,7 +67,7 @@ def spearman_rows(D, y):
 
 
 rng = np.random.default_rng(SEED)
-# proyeksi acak DITENTUKAN SEKALI utk semua tipe/fold (fair: kandidat tetap)
+# the random projections are FIXED ONCE for all types/folds (fair: same candidates)
 PROJ = [rng.standard_normal((4096, PROJ_DIM)).astype(np.float32) / np.sqrt(4096)
         for _ in range(N_PROJ_PER_LAYER)]
 
@@ -78,7 +78,7 @@ for ty in sorted(set(types)):
     iu = np.triu_indices(m, 1)
     y = real[np.ix_(idx, idx)][iu]
 
-    def all_locs_heads(E4):        # E4 (169,32,32,128) sudah Tmean/subset templat
+    def all_locs_heads(E4):        # E4 (169,32,32,128) already Tmean/template subset
         X = E4[idx].reshape(m, 1024, 128).transpose(1, 0, 2)
         return rdm_rows(X)
 
@@ -86,7 +86,7 @@ for ty in sorted(set(types)):
         X = E4[idx].transpose(1, 0, 2)
         return rdm_rows(X)
 
-    def all_locs_proj(E4):         # residual diproyeksikan: 32 layer x 32 proj
+    def all_locs_proj(E4):         # projected residual: 32 layers x 32 projections
         outs = []
         for L in range(1, L_RES):  # skip layer 0 (degenerate)
             base = E4[idx, L, :]
@@ -101,33 +101,33 @@ for ty in sorted(set(types)):
     rho_r = spearman_rows(all_locs_resid(Tm_r), y)
     rho_p = spearman_rows(all_locs_proj(Tm_r), y)
 
-    # --- held-out template utk KETIGA keluarga kandidat (prosedur identik) ---
+    # --- template held-out for ALL THREE candidate families (identical procedure) ---
     def heldout(all_locs, E):
         ho = []
         for t_out in range(4):
             t_in = [t for t in range(4) if t != t_out]
             D_in = all_locs(E[t_in].mean(0))
-            sel = int(np.nanargmax(spearman_rows(D_in, y)))
+            selected = int(np.nanargmax(spearman_rows(D_in, y)))
             D_out = all_locs(E[t_out])
-            ho.append(float(spearman_rows(D_out[sel:sel + 1], y)[0]))
+            ho.append(float(spearman_rows(D_out[selected:selected + 1], y)[0]))
         return float(np.mean(ho))
 
     ho_head = heldout(all_locs_heads, E_h)
     ho_resid = heldout(all_locs_resid, E_r)
     ho_proj = heldout(all_locs_proj, E_r)
 
-    rows.append(dict(tipe=ty, n_sel=m,
-                     head_sel=float(np.nanmax(rho_h)),
-                     resid_sel=float(np.nanmax(rho_r)),
-                     proj_sel=float(np.nanmax(rho_p)),
+    rows.append(dict(type=ty, n_cells=m,
+                     head_selected=float(np.nanmax(rho_h)),
+                     resid_selected=float(np.nanmax(rho_r)),
+                     proj_selected=float(np.nanmax(rho_p)),
                      head_heldout=ho_head, resid_heldout=ho_resid,
                      proj_heldout=ho_proj,
                      head_median=float(np.nanmedian(rho_h)),
                      proj_median=float(np.nanmedian(rho_p))))
-    print(f"[{ty}] sel: head {np.nanmax(rho_h):+.3f} resid {np.nanmax(rho_r):+.3f} "
+    print(f"[{ty}] selected: head {np.nanmax(rho_h):+.3f} resid {np.nanmax(rho_r):+.3f} "
           f"proj {np.nanmax(rho_p):+.3f} | held-out: head {ho_head:+.3f} "
           f"resid {ho_resid:+.3f} proj {ho_proj:+.3f}")
 
 res = pd.DataFrame(rows)
 res.to_csv(f"{OUT}/head_vs_residual_fair.csv", index=False)
-print("\ndisimpan -> head_vs_residual_fair.csv")
+print("\nsaved -> head_vs_residual_fair.csv")

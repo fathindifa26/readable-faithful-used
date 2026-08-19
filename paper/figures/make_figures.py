@@ -1,16 +1,18 @@
 #!/usr/bin/env python
-"""Bikin semua figur Paper 1 dari CSV hasil notebook (yang sudah di-download).
+"""Build all Paper 1 figures from the notebook result CSVs (downloaded).
 
-Jalankan dari root repo:  ./venv/Scripts/python.exe paper/figures/make_figures.py
+Run from the repo root:  ./venv/Scripts/python.exe paper/figures/make_figures.py
 
-Sumber angka (jangan hardcode angka di sini kecuali ambang permutasi, yang
-memang dihitung terpisah di analisis lokal finding 09):
-  fig_headmap      <- notebooks/output/09_.../peta_kesetiaan_full.csv
-  fig_layercurve   <- notebooks/output/09_.../peta_kesetiaan_full.csv
-  fig_causal_sweep <- notebooks/output/13_.../sweep_rows.csv (t dihitung ulang)
+Where the numbers come from (do not hardcode numbers here, except the
+permutation threshold, which is computed separately in the local analysis
+of finding 09):
+  fig_headmap      <- notebooks/output/09_.../fidelity_map_full.csv
+  fig_layercurve   <- notebooks/output/09_.../fidelity_map_full.csv
+  fig_causal_sweep <- notebooks/output/13_.../sweep_rows.csv (t recomputed)
 
-Palet: Okabe-Ito subset, lolos validator CVD (deutan dE 11.0, normal 25.8).
-Diverging heatmap: dua kutub + titik tengah netral abu (bukan pelangi).
+Palette: Okabe-Ito subset, passes the CVD validator (deutan dE 11.0,
+normal 25.8).
+Diverging heatmap: two poles + a neutral grey midpoint (not a rainbow).
 """
 from pathlib import Path
 
@@ -25,22 +27,22 @@ from scipy import stats
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = Path(__file__).resolve().parent
-MAP_CSV = ROOT / "notebooks/output/09_tahap2_peta_kesetiaan_kaggle/peta_kesetiaan_full.csv"
-SWEEP_CSV = ROOT / "notebooks/output/13_tahap2_sweep_dan_probe_kaggle/sweep_rows.csv"
-NB14 = ROOT / "notebooks/output/14_tahap2_probefix_sweep6_kaggle"
+MAP_CSV = ROOT / "results/04_fidelity_map/fidelity_map_full.csv"
+SWEEP_CSV = ROOT / "results/07_sweep_and_probe/sweep_rows.csv"
+NB14 = ROOT / "results/08_probe_causal_dissociation"
 SWEEP6_CSV = NB14 / "sweep6_rows.csv"
-MAXSTAT_CSV = NB14 / "sweep_all6_maxstat.csv"      # ambang noise 6 tipe (1 run, 1 seed)
-FIXED_LAYER_CSV = NB14 / "fixed_layer_L11_L1.csv"  # uji lokasi-tetap L11 & L1 (level item)
-PAIRLEVEL_CSV = NB14 / "causal_pairlevel_sweep.csv"  # inferensi level-PASANGAN (utama)
-SPLITHALF_CSV = ROOT / ("notebooks/output/09_tahap2_peta_kesetiaan_kaggle/"
-                        "koreksi_seleksi/cek3_splithalf.csv")
+MAXSTAT_CSV = NB14 / "sweep_all6_maxstat.csv"      # noise ceiling, 6 types (1 run, 1 seed)
+FIXED_LAYER_CSV = NB14 / "fixed_layer_L11_L1.csv"  # fixed-location test L11 & L1 (item level)
+PAIRLEVEL_CSV = NB14 / "causal_pairlevel_sweep.csv"  # PAIR-level inference (main)
+SPLITHALF_CSV = ROOT / ("results/04_fidelity_map/"
+                        "selection_correction/check3_splithalf.csv")
 PROBE_CSV = NB14 / "probe_v2_summary.csv"
-GROUPRANK_CSV = NB14 / "probe_v2_grouprank.csv"     # uji belah-dua (bebas artefak LOO)
-CEILING_CSV = NB14 / "grouprank_noise_ceiling.csv"  # langit-langit reliabilitas metrik
-HELDOUT_CSV = ROOT / ("notebooks/output/09_tahap2_peta_kesetiaan_kaggle/"
-                      "koreksi_seleksi/cek1_heldout_template.csv")
+GROUPRANK_CSV = NB14 / "probe_v2_grouprank.csv"     # split-half test (no LOO artefact)
+CEILING_CSV = NB14 / "grouprank_noise_ceiling.csv"  # reliability ceiling of the metric
+HELDOUT_CSV = ROOT / ("results/04_fidelity_map/"
+                      "selection_correction/check1_heldout_template.csv")
 
-# --- parameter desain -------------------------------------------------------
+# --- design parameters ------------------------------------------------------
 CAT = {"resid": "#0072B2", "head": "#D55E00", "mlp": "#009E73"}
 INK, INK_MUTED, GRID = "#1a1a1a", "#5c5c5c", "#d8d8d5"
 DIVERGING = LinearSegmentedColormap.from_list(
@@ -50,8 +52,8 @@ STAR_LAYER, STAR_HEAD = 11, 16
 
 TYPES = ["AGExPOLPARTY", "EDUCATIONxINCOME", "RELIGxPOLPARTY",
          "RACExPOLPARTY", "RACExPOLIDEOLOGY", "RACExRELIG"]
-# ambang noise (persentil-95 max-t, sign-flip 2000x) dibaca dari CSV, bukan
-# di-hardcode -- semua 6 tipe dihitung dalam satu run/seed yang sama.
+# the noise ceiling (95th pct of max-t, sign-flip 2000x) is read from the
+# CSV, not hardcoded -- all 6 types computed in one and the same run/seed.
 
 plt.rcParams.update({
     "font.size": 8, "axes.labelsize": 8, "axes.titlesize": 8.5,
@@ -75,7 +77,7 @@ def save(fig, stem):
     print("  -> " + stem + ".pdf / .png")
 
 
-# --- Fig 1: peta head 32x32 per tipe ---------------------------------------
+# --- Fig 1: 32x32 head map per type ----------------------------------------
 def fig_headmap(df):
     h = df[(df.component == "head") & (df.template == "Tmean")]
     grids = {t: h[h.attr_type == t].pivot(index="layer", columns="head", values="rho").to_numpy()
@@ -112,7 +114,7 @@ def fig_headmap(df):
     save(fig, "fig_headmap")
 
 
-# --- Fig 2: kurva per-layer, residual vs head terbaik vs FFN ---------------
+# --- Fig 2: per-layer curve, residual vs best head vs FFN ------------------
 def fig_layercurve(df):
     d = df[df.template == "Tmean"]
     fig, axes = plt.subplots(2, 3, figsize=(7.1, 3.9), sharex=True, sharey=True,
@@ -144,11 +146,11 @@ def fig_layercurve(df):
     save(fig, "fig_layercurve")
 
 
-# --- Fig 3: sweep kausal per-layer, 6 tipe, t vs ambang permutasi ---------
+# --- Fig 3: per-layer causal sweep, 6 types, t vs permutation threshold ---
 def _sweep_t():
-    """t per layer per tipe, dari dua notebook sweep digabung."""
+    """t per layer per type, from the two sweep notebooks combined."""
     d = pd.concat([pd.read_csv(SWEEP_CSV), pd.read_csv(SWEEP6_CSV)])
-    d["diff"] = d.shift_ke_realB - d.shift_ctrl_ke_realB
+    d["diff"] = d.shift_to_realB - d.shift_ctrl_to_realB
     out = {}
     for ty, g in d.groupby("attr_type"):
         piv = g.pivot_table(index=["pair", "qkey"], columns="layer", values="diff").dropna()
@@ -196,11 +198,11 @@ def fig_causal_sweep():
     save(fig, "fig_causal_sweep")
 
 
-# --- Fig 5: kesetiaan vs kekuatan kausal (disosiasi, level PASANGAN) ------
+# --- Fig 5: fidelity vs causal strength (dissociation, PAIR level) --------
 def fig_fidelity_vs_causal():
-    # estimator kesetiaan KONSISTEN (review C2): median split-half (cek3)
+    # CONSISTENT fidelity estimator (review C2): split-half median (cek3)
     fid = pd.read_csv(SPLITHALF_CSV).set_index("attr_type")["heldout_median"]
-    pl = pd.read_csv(PAIRLEVEL_CSV).set_index("tipe")
+    pl = pd.read_csv(PAIRLEVEL_CSV).set_index("type")
     from scipy.stats import spearmanr
     x = fid[TYPES].to_numpy()
     panels = [("$t$ at the a-priori locus L11", pl.loc[TYPES, "t_L11_pair"].to_numpy(),
@@ -233,11 +235,12 @@ def fig_fidelity_vs_causal():
     save(fig, "fig_fidelity_vs_causal")
 
 
-# --- Fig 4: lokasi TETAP L11 H16 vs baseline residual ---------------------
+# --- Fig 4: FIXED location L11 H16 vs residual baseline -------------------
 def fig_starhead(df):
-    # dua seri dari SUMBER YANG SAMA (peta Tmean) biar apple-to-apple;
-    # uji signifikansinya sendiri ada di cek4_fixed_heads.csv (subset sel
-    # bersih-NaN, angkanya beda tipis di tipe berbau ras: .59/.33 vs .56/.31)
+    # two series from the SAME SOURCE (the Tmean map) to keep it
+    # apple-to-apple; the significance test itself lives in
+    # check4_fixed_heads.csv (NaN-clean cell subset, numbers differ slightly
+    # for the race-flavoured types: .59/.33 vs .56/.31)
     d = df[df.template == "Tmean"]
     fixed = (d[(d.component == "head") & (d.layer == STAR_LAYER) & (d["head"] == STAR_HEAD)]
              .set_index("attr_type")["rho"])
@@ -263,11 +266,11 @@ def fig_starhead(df):
     save(fig, "fig_starhead")
 
 
-# --- Fig 6: probe (baca peta) vs mulut model -----------------------------
+# --- Fig 6: probe (reading the map) vs the model mouth -------------------
 def fig_probe():
-    s = pd.read_csv(PROBE_CSV).set_index("tipe")
-    g = pd.read_csv(GROUPRANK_CSV).set_index("tipe")
-    ceil = pd.read_csv(CEILING_CSV).set_index("tipe")["langit_reliabilitas"]
+    s = pd.read_csv(PROBE_CSV).set_index("type")
+    g = pd.read_csv(GROUPRANK_CSV).set_index("type")
+    ceil = pd.read_csv(CEILING_CSV).set_index("type")["reliability_ceiling"]
     order = TYPES
     x = np.arange(len(order))
     w = 0.2
@@ -275,7 +278,7 @@ def fig_probe():
     fig, axes = plt.subplots(1, 2, figsize=(7.1, 3.0), constrained_layout=True)
 
     ax = axes[0]
-    series = [("model's own answer", "wd_mulut", "#8a8a85"),
+    series = [("model's own answer", "wd_mouth", "#8a8a85"),
               ("probe: L11 (4{,}096 d)", "wd_L11", CAT["resid"]),
               ("probe: L11 H16 (128 d)", "wd_L11H16", CAT["head"]),
               ("other groups' real answers", "wd_qmean", CAT["mlp"])]
@@ -292,7 +295,7 @@ def fig_probe():
     ax.tick_params(length=2)
 
     ax = axes[1]
-    for k, (lab, col, c) in enumerate([("model's own answer", "gr_mulut", "#8a8a85"),
+    for k, (lab, col, c) in enumerate([("model's own answer", "gr_mouth", "#8a8a85"),
                                        ("probe: L11", "gr_L11", CAT["resid"]),
                                        ("probe: L11 H16", "gr_L11H16", CAT["head"])]):
         ax.bar(x + (k - 1) * w, g.loc[order, col], width=w, color=c, label=lab,
@@ -318,14 +321,14 @@ def fig_probe():
 
 
 if __name__ == "__main__":
-    print("membaca peta kesetiaan ...")
+    print("reading the fidelity map ...")
     df = pd.read_csv(MAP_CSV)
     fig_headmap(df)
     fig_layercurve(df)
     fig_starhead(df)
-    print("membaca sweep kausal ...")
+    print("reading the causal sweep ...")
     fig_causal_sweep()
     fig_fidelity_vs_causal()
-    print("membaca hasil probe ...")
+    print("reading the probe results ...")
     fig_probe()
-    print("selesai. figur di", OUT)
+    print("done. figures in", OUT)

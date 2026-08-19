@@ -1,4 +1,4 @@
-model,tipe,n_pair,wd_abs,ceiling,ceiling_pct,adv_median,frac_adv_pos,p_sign
+model,type,n_pair,wd_abs,ceiling,ceiling_pct,adv_median,frac_adv_pos,p_sign
 mistral_base,AGExPOLPARTY,306,0.3572,0.0093,2.61,0.0108,0.559,0.0452
 mistral_base,EDUCATIONxINCOME,1056,0.3266,0.0033,1.02,0.0041,0.547,0.0023
 mistral_base,RACExPOLIDEOLOGY,820,0.3729,0.0343,9.19,0.0245,0.621,0.0

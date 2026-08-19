@@ -13,5 +13,5 @@
 one head, **layer 11 / head 16**, is significantly faithful as a *fixed*
 location across all six types (the paper's `\starhead`). Honest
 (held-out) fidelity ranges ρ≈0.50–0.63 across types. Outputs:
-`results/04_fidelity_map/peta_kesetiaan_full.csv` and
-`results/04_fidelity_map/koreksi_seleksi/cek*.csv`.
+`results/04_fidelity_map/fidelity_map_full.csv` and
+`results/04_fidelity_map/selection_correction/check*.csv`.

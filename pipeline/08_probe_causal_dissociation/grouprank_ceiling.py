@@ -1,12 +1,14 @@
-"""Langit-langit reliabilitas metrik "urutan kelompok per soal".
+"""Reliability ceiling of the "group ordering per question" metric.
 
-Kenapa perlu: probe & mulut sama-sama dapat korelasi urutan ~0.05-0.10.
-Kecil -- tapi kecil dibanding APA? Data survei sendiri punya noise sampling
-(tiap sel cuma n~132 responden), jadi metrik ini punya batas atas < 1.
+Why it is needed: probe & the model's own answers both get an ordering
+correlation of ~0.05-0.10. Small -- but small compared to WHAT? The survey
+data itself has sampling noise (each cell has only n~132 respondents), so
+this metric has an upper bound < 1.
 
-Cara: buat DUA sampel survei independen dari distribusi tiap sel (multinomial
-sebesar n_unweighted asli), lalu jalankan uji yang sama antar dua sampel itu.
-Hasilnya = setinggi apa metrik ini bisa dicapai kalau read-out-nya sempurna.
+How: build TWO independent survey samples from each cell's distribution
+(multinomial of the original n_unweighted size), then run the same test
+between those two samples. The result = how high this metric could go if
+the read-out were perfect.
 
 Output: notebooks/output/14_.../grouprank_noise_ceiling.csv
 """
@@ -55,7 +57,7 @@ for ty in TYPES:
         r = spearmanr(a, b).statistic
         if not np.isnan(r):
             out.append(r)
-    rows.append(dict(tipe=ty, n_soal=len(out), langit_reliabilitas=float(np.mean(out))))
-    print(f"[{ty}] langit-langit = {np.mean(out):+.3f} (n soal={len(out)})")
+    rows.append(dict(type=ty, n_questions=len(out), reliability_ceiling=float(np.mean(out))))
+    print(f"[{ty}] ceiling = {np.mean(out):+.3f} (n questions={len(out)})")
 
 pd.DataFrame(rows).to_csv(f"{OUT}/grouprank_noise_ceiling.csv", index=False)

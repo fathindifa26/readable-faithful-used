@@ -1,14 +1,14 @@
 #!/usr/bin/env python
-"""Cek struktural LaTeX tanpa perlu pdflatex (biar bisa dijalankan di lokal).
+"""Structural LaTeX check without needing pdflatex (so it runs locally).
 
-Yang dicek:
-  1. \\begin{X} vs \\end{X} berimbang per file
-  2. kurung kurawal berimbang per file (abaikan \\{ \\} dan comment)
-  3. \\ref/\\citep menunjuk ke \\label/entri bib yang ada
-  4. \\includegraphics menunjuk ke file yang ada di figures/
-  5. sisa \\todo / \\pending (ringkasan, bukan error)
+What is checked:
+  1. \\begin{X} vs \\end{X} balanced per file
+  2. curly braces balanced per file (ignoring \\{ \\} and comments)
+  3. \\ref/\\citep point to an existing \\label / bib entry
+  4. \\includegraphics points to a file that exists in figures/
+  5. leftover \\todo / \\pending (a summary, not an error)
 
-Jalankan:  python paper/check_tex.py
+Run:  python paper/check_tex.py
 """
 import re
 import sys
@@ -30,7 +30,7 @@ def strip(t):
 labels, refs, cites, figs = set(), [], [], []
 for f in FILES:
     if f.name == "00_title_options.tex":
-        continue  # catatan kerja, tidak di-include
+        continue  # working notes, not included
     raw = f.read_text(encoding="utf-8")
     t = strip(raw)
 
@@ -45,10 +45,10 @@ for f in FILES:
     for m in re.finditer(r"(?<!\\)[{}]", t):
         depth += 1 if m.group() == "{" else -1
         if depth < 0:
-            problems.append(f"{f.name}: '}}' berlebih di posisi {m.start()}")
+            problems.append(f"{f.name}: extra '}}' at position {m.start()}")
             break
     if depth > 0:
-        problems.append(f"{f.name}: {depth} '{{' tidak ditutup")
+        problems.append(f"{f.name}: {depth} '{{' not closed")
 
     labels |= set(re.findall(r"\\label\{([^}]+)\}", t))
     refs += [(f.name, r) for r in re.findall(r"\\(?:eq)?ref\{([^}]+)\}", t)]
@@ -63,28 +63,28 @@ for f in FILES:
 
 for fname, r in refs:
     if r not in labels:
-        problems.append(f"{fname}: \\ref{{{r}}} tidak punya \\label")
+        problems.append(f"{fname}: \\ref{{{r}}} has no \\label")
 
 bibkeys = set(re.findall(r"@\w+\{([^,]+),", BIB.read_text(encoding="utf-8")))
 for fname, c in cites:
     if c not in bibkeys:
-        problems.append(f"{fname}: \\cite{{{c}}} tidak ada di references.bib")
+        problems.append(f"{fname}: \\cite{{{c}}} is not in references.bib")
 
 for fname, g in figs:
     if not any((FIGDIR / (g + ext)).exists() for ext in ("", ".pdf", ".png")):
-        problems.append(f"{fname}: gambar '{g}' tidak ditemukan di figures/")
+        problems.append(f"{fname}: figure '{g}' not found in figures/")
 
-print("label:", len(labels), "| ref:", len(refs), "| sitasi unik:",
-      len(set(c for _, c in cites)), "| figur:", len(figs))
+print("label:", len(labels), "| ref:", len(refs), "| unique citations:",
+      len(set(c for _, c in cites)), "| figures:", len(figs))
 for n in notes:
-    print("  sisa kerjaan -", n)
+    print("  outstanding work -", n)
 unused = bibkeys - set(c for _, c in cites)
 if unused:
-    print("  bib tidak terpakai:", ", ".join(sorted(unused)))
+    print("  unused bib entries:", ", ".join(sorted(unused)))
 
 if problems:
-    print("\nMASALAH:")
+    print("\nPROBLEMS:")
     for p in problems:
         print("  x", p)
     sys.exit(1)
-print("\nstruktur OK")
+print("\nstructure OK")

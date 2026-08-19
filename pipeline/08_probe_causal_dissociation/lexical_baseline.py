@@ -1,21 +1,21 @@
-"""Review A2: baseline leksikal + partial Spearman — konfound terbahaya.
+"""Review A2: lexical baseline + partial Spearman — the most dangerous confound.
 
-Kekhawatiran: prompt antar sel cuma beda di KATA nilai atribut ("Democrat",
-"Hindu", "30-49", ...). Jangan-jangan "peta kesetiaan" cuma merekam
-similarity semantik statis kata-kata itu — yang memang berkorelasi dgn
-similarity opini riil.
+The worry: prompts differ between cells only in the WORDS of the attribute
+values ("Democrat", "Hindu", "30-49", ...). What if the "fidelity map" merely
+records the static semantic similarity of those words — which does correlate
+with real opinion similarity?
 
-Tes: bangun RDM leksikal dari embedding kalimat kecil non-opini
-(all-MiniLM-L6-v2, 22M param, tanpa konteks survei apa pun), lalu:
-  1. rho(leksikal, survei) per tipe        -> seberapa kuat konfoundnya
-  2. rho(L11H16, survei) & rho(head-best)  -> angka lama
-  3. PARTIAL Spearman: rho(model, survei | leksikal)
-     -> kesetiaan yang TERSISA setelah similarity kata dikontrol
-  4. kontrol tambahan: rho(model, leksikal) -> seberapa leksikal si head
+Test: build a lexical RDM from embeddings of small non-opinion sentences
+(all-MiniLM-L6-v2, 22M params, without any survey context), then:
+  1. rho(lexical, survey) per type       -> how strong the confound is
+  2. rho(L11H16, survey) & rho(head-best) -> the old numbers
+  3. PARTIAL Spearman: rho(model, survey | lexical)
+     -> the fidelity that REMAINS after word similarity is controlled for
+  4. extra control: rho(model, lexical) -> how lexical the head itself is
 
-Dua varian RDM leksikal:
-  - "nilai"   : rata-rata embedding dua frasa nilai ("18-29", "Democrat")
-  - "kalimat" : embedding kalimat T0 utuh (persis prompt yang dipakai)
+Two variants of the lexical RDM:
+  - "value"   : mean embedding of the two value phrases ("18-29", "Democrat")
+  - "sentence" : embedding of the whole T0 sentence (exactly the prompt used)
 
 Output: notebooks/output/14_.../lexical_partial.csv
 """
@@ -49,7 +49,7 @@ ATTR_LABELS = {
     "AGExPOLPARTY": ("age group", "political party affiliation"),
 }
 
-# ---------- embedding leksikal ----------
+# ---------- lexical embedding ----------
 from sentence_transformers import SentenceTransformer
 enc = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
@@ -86,7 +86,7 @@ def clean_subset(idx):
 
 
 def partial_spearman(x, y, z):
-    """rho(x, y | z) di ranks."""
+    """rho(x, y | z) on ranks."""
     rx, ry, rz = rankdata(x), rankdata(y), rankdata(z)
     rxy = np.corrcoef(rx, ry)[0, 1]
     rxz = np.corrcoef(rx, rz)[0, 1]
@@ -95,9 +95,10 @@ def partial_spearman(x, y, z):
 
 
 def perm_p_partial(x, y, z, n_perm=2000, seed=0):
-    """p utk partial rho: permutasi label sel (bukan pasangan)."""
-    # x,y,z sudah vektor pasangan; permutasi harus di level sel -> rekonstruksi
-    return None  # p dihitung di pemanggil dgn permutasi matriks sel
+    """p for the partial rho: permute cell labels (not pairs)."""
+    # x,y,z are already pair vectors; the permutation has to happen at the
+    # cell level -> reconstruction
+    return None  # p is computed in the caller by permuting the cell matrix
 
 
 rows = []
@@ -107,9 +108,9 @@ for ty in sorted(set(types)):
     m = len(idx)
     iu = np.triu_indices(m, 1)
     sub_real = real[np.ix_(idx, idx)]
-    y = sub_real[iu]                                  # survei
+    y = sub_real[iu]                                  # survey
 
-    # model: L11 H16 dan head terbaik tipe ini
+    # model: L11 H16 and the best head for this type
     x_star = rdm(heads[:, STAR_LAYER, STAR_HEAD, :], idx)
     flat = heads[idx].reshape(m, 32 * 32, 128).transpose(1, 0, 2)
     flat = flat / (np.linalg.norm(flat, axis=2, keepdims=True) + 1e-8)
@@ -119,8 +120,8 @@ for ty in sorted(set(types)):
     best = int(np.nanargmax(rhos))
     x_best = D_all[best]
 
-    for lex_name, E in [("nilai", E_nilai), ("kalimat", E_kalimat)]:
-        z = rdm(E, idx)                               # leksikal
+    for lex_name, E in [("value", E_nilai), ("sentence", E_kalimat)]:
+        z = rdm(E, idx)                               # lexical
         r_lex_survey = spearmanr(z, y).statistic
         r_star = spearmanr(x_star, y).statistic
         r_best = rhos[best]
@@ -128,7 +129,7 @@ for ty in sorted(set(types)):
         p_star = partial_spearman(x_star, y, z)
         p_best = partial_spearman(x_best, y, z)
 
-        # p permutasi utk partial (acak label sel di RDM survei, 2000x)
+        # permutation p for the partial (shuffle cell labels in the survey RDM, 2000x)
         cnt_s = cnt_b = 0
         for _ in range(2000):
             perm = rng.permutation(m)
@@ -137,16 +138,16 @@ for ty in sorted(set(types)):
                 cnt_s += 1
             if partial_spearman(x_best, yp, z) >= p_best - 1e-12:
                 cnt_b += 1
-        rows.append(dict(tipe=ty, lex=lex_name, n_sel=m,
-                         rho_lex_survei=r_lex_survey,
+        rows.append(dict(type=ty, lex=lex_name, n_cells=m,
+                         rho_lex_survey=r_lex_survey,
                          rho_star=r_star, rho_star_lex=r_star_lex,
                          partial_star=p_star, p_partial_star=cnt_s / 2000,
                          rho_best=r_best, partial_best=p_best,
                          p_partial_best=cnt_b / 2000))
-        print(f"[{ty}|{lex_name}] lex-vs-survei {r_lex_survey:+.3f} | "
+        print(f"[{ty}|{lex_name}] lex-vs-survey {r_lex_survey:+.3f} | "
               f"H16 {r_star:+.3f} -> partial {p_star:+.3f} (p={cnt_s/2000:.4f}) | "
               f"best {r_best:+.3f} -> partial {p_best:+.3f} (p={cnt_b/2000:.4f})")
 
 res = pd.DataFrame(rows)
 res.to_csv(f"{OUT}/lexical_partial.csv", index=False)
-print("\ndisimpan -> lexical_partial.csv")
+print("\nsaved -> lexical_partial.csv")

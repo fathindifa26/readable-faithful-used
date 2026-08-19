@@ -1,18 +1,18 @@
-"""Finding 10 v2 — probe dari peta internal vs "mulut" model.
+"""Finding 10 v2 — probe from the internal map vs the model's "mouth".
 
-Pertanyaan: berapa banyak informasi opini kelompok yang ADA di dalam model
-tapi HILANG waktu jadi jawaban?
+Question: how much group-opinion information EXISTS inside the model but is
+LOST by the time it turns into an answer?
 
-Desain:
-  fitur   : aktivasi di L11 (4096 dim), L1 (4096 dim), dan L11 H16 saja (128 dim)
-  target  : distribusi jawaban survei ASLI utk (sel, soal) itu
-  CV      : leave-one-cell-out -- probe diuji di kelompok yang BELUM PERNAH dilihat
-  metrik  : Wasserstein distance ke distribusi asli (makin kecil makin bagus)
-  alpha   : dipilih di dalam fold (inner split per-sel), bukan di data uji
-  pembanding:
-    - mulut  : softmax huruf jawaban model sendiri
-    - rata2 soal : rata-rata distribusi asli soal itu dari sel-sel TRAINING
-                   (baseline penting: nggak pakai info kelompok sama sekali)
+Design:
+  features: activations at L11 (4096 dim), L1 (4096 dim), and L11 H16 only (128 dim)
+  target  : the REAL survey answer distribution for that (cell, question)
+  CV      : leave-one-cell-out -- the probe is tested on a group it has NEVER seen
+  metric  : Wasserstein distance to the real distribution (smaller is better)
+  alpha   : picked inside the fold (inner per-cell split), not on the test data
+  comparisons:
+    - mouth : softmax over the model's own answer letters
+    - question mean : mean real distribution of that question over the TRAINING
+                      cells (important baseline: uses no group info at all)
 
 Output: notebooks/output/14_.../probe_v2_summary.csv + probe_v2_percell.csv
 """
@@ -39,7 +39,7 @@ ALPHAS = [1.0, 10.0, 100.0, 1000.0]
 STAR_HEAD, HEAD_DIM = 16, 128
 SEED = 42
 
-print("baca ground truth ...")
+print("reading ground truth ...")
 raw = pd.read_csv(data_path("opinionqa_intersectional.csv"))
 raw["ordinal"] = raw["ordinal"].apply(ast.literal_eval)
 raw["responses"] = raw["responses"].apply(ast.literal_eval)
@@ -50,7 +50,7 @@ del raw
 
 
 def wd_vec(pred, Y, nopt, ords):
-    """WD per baris antara prediksi dan distribusi asli."""
+    """Per-row WD between the prediction and the real distribution."""
     out = np.empty(len(pred))
     for i in range(len(pred)):
         k = nopt[i]
@@ -91,13 +91,13 @@ for ty in TYPES:
     for fold, cell in enumerate(cells):
         te = np.where(gk == cell)[0]
         tr = np.where(gk != cell)[0]
-        # baseline rata-rata soal (hanya dari sel training)
+        # question-mean baseline (from the training cells only)
         dfq = pd.DataFrame(Y[tr]).groupby(qk[tr]).mean()
         glob = Y[tr].mean(0)
         for i in te:
             pred["qmean"][i] = dfq.loc[qk[i]].to_numpy() if qk[i] in dfq.index else glob
 
-        # inner split per-sel buat milih alpha
+        # inner per-cell split for picking alpha
         tr_cells = [c for c in cells if c != cell]
         inner_val = set(rng.choice(tr_cells, size=max(1, len(tr_cells) // 5), replace=False))
         in_tr = np.array([i for i in tr if gk[i] not in inner_val])
@@ -121,15 +121,15 @@ for ty in TYPES:
             alpha_used[name].append(best_a)
             pred[name][te] = Ridge(alpha=best_a).fit(Xtr, Y[tr]).predict(Xte)
 
-    # skor
-    scores = {"mulut": wd_vec(mouth, Y, nopt, ords)}
+    # scores
+    scores = {"mouth": wd_vec(mouth, Y, nopt, ords)}
     for k in pred:
         scores[k] = wd_vec(pred[k], Y, nopt, ords)
-    row = dict(tipe=ty, n_baris=n, n_sel=len(cells), n_soal=df.qk.nunique())
+    row = dict(type=ty, n_rows=n, n_cells=len(cells), n_questions=df.qk.nunique())
     for k, v in scores.items():
         row[f"wd_{k}"] = v.mean()
-    row["menang_vs_mulut"] = float((scores["L11"] < scores["mulut"]).mean())
-    row["menang_vs_qmean"] = float((scores["L11"] < scores["qmean"]).mean())
+    row["win_vs_mouth"] = float((scores["L11"] < scores["mouth"]).mean())
+    row["win_vs_qmean"] = float((scores["L11"] < scores["qmean"]).mean())
     row["alpha_L11_median"] = float(np.median(alpha_used["L11"]))
     rows_sum.append(row)
 
@@ -137,10 +137,10 @@ for ty in TYPES:
                         **{f"pred_{k}": v for k, v in pred.items()},
                         mouth=mouth, Y=Y, nopt=nopt, gk=gk.astype(str), qk=qk.astype(str))
 
-    # --- metrik pembeda-kelompok: per soal, urutan kelompok bener nggak? ---
+    # --- group-discrimination metric: per question, is the group ordering right? ---
     def group_rank_corr(P):
-        """Per soal: korelasi Spearman antara 'rata-rata opini' prediksi
-        per sel vs versi asli, lalu dirata-rata antar soal."""
+        """Per question: Spearman correlation between the predicted per-cell
+        'mean opinion' and the real version, then averaged across questions."""
         from scipy.stats import spearmanr as _sp
         out = []
         for q in set(qk):
@@ -161,21 +161,21 @@ for ty in TYPES:
                 out.append(r)
         return float(np.mean(out)), len(out)
 
-    for k in ["mulut"] + list(pred):
-        P = mouth if k == "mulut" else pred[k]
+    for k in ["mouth"] + list(pred):
+        P = mouth if k == "mouth" else pred[k]
         r, nq = group_rank_corr(P)
         row[f"grouprank_{k}"] = r
-    row["grouprank_n_soal"] = nq
+    row["grouprank_n_questions"] = nq
 
     for cell in cells:
         m = gk == cell
-        rows_cell.append(dict(tipe=ty, sel=cell, n=int(m.sum()),
+        rows_cell.append(dict(type=ty, cell=cell, n=int(m.sum()),
                               **{f"wd_{k}": float(v[m].mean()) for k, v in scores.items()}))
-    print(f"[{ty}] {time.time()-t0:.0f}s  mulut {row['wd_mulut']:.4f} | "
+    print(f"[{ty}] {time.time()-t0:.0f}s  mouth {row['wd_mouth']:.4f} | "
           f"L11 {row['wd_L11']:.4f} | L1 {row['wd_L1']:.4f} | "
-          f"H16 {row['wd_L11H16']:.4f} | rata2soal {row['wd_qmean']:.4f}")
+          f"H16 {row['wd_L11H16']:.4f} | qmean {row['wd_qmean']:.4f}")
 
 pd.DataFrame(rows_sum).to_csv(f"{OUT}/probe_v2_summary.csv", index=False)
 pd.DataFrame(rows_cell).to_csv(f"{OUT}/probe_v2_percell.csv", index=False)
-print("\n=== RINGKASAN ===")
+print("\n=== SUMMARY ===")
 print(pd.DataFrame(rows_sum).round(4).to_string(index=False))

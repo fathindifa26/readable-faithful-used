@@ -1,20 +1,20 @@
-"""Analisis robustness lintas-checkpoint (notebook 15): peta + mulut.
+"""Cross-checkpoint robustness analysis (notebook 15): map + mouth.
 
-Per checkpoint (base / mid / osim), per tipe:
-  - kesetiaan residual terbaik & head terbaik (Tmean)
-  - koreksi seleksi: max-statistic permutation (juara-vs-juara, 2000x)
-    + held-out template (angka jujur)
-  - kesetiaan OUTPUT: RSA antara RDM prediksi-mulut dan RDM survei
-  - akurasi mulut absolut (WD rata-rata ke distribusi asli)
-Lalu tabel perbandingan base -> mid -> osim.
+Per checkpoint (base / mid / osim), per type:
+  - best residual fidelity & best head (Tmean)
+  - selection correction: max-statistic permutation (winner-vs-winner,
+    2000x) + held-out template (honest numbers)
+  - OUTPUT fidelity: RSA between the mouth-prediction RDM and the survey RDM
+  - absolute mouth accuracy (mean WD to the real distribution)
+Then a base -> mid -> osim comparison table.
 
-Validasi: `--selftest` menjalankan pipeline yang sama di data Mistral
-(notebook 09) dan membandingkan dengan angka finding 05/06 yang sudah
-dipublikasikan di catatan.
+Validation: `--selftest` runs the same pipeline on the Mistral data
+(notebook 09) and compares it with the finding 05/06 numbers already
+published in the notes.
 
-Jalankan dari root repo:
-  ./venv/Scripts/python.exe analisis_lokal/robustness_map.py            # data notebook 15
-  ./venv/Scripts/python.exe analisis_lokal/robustness_map.py --selftest # validasi di data lama
+Run from the repo root:
+  ./venv/Scripts/python.exe pipeline/09_robustness_cross_model/robustness_map.py            # notebook 15 data
+  ./venv/Scripts/python.exe pipeline/09_robustness_cross_model/robustness_map.py --selftest # validate on old data
 """
 import ast
 import os
@@ -36,7 +36,7 @@ N_PERM = 2000
 SEED = 42
 
 
-# ---------- penggaris survei (dipakai semua model) ----------
+# ---------- survey ruler (used by every model) ----------
 def load_survey():
     real = np.load(f"{NB09}/group_real_dist.npy")
     keys = list(np.load(f"{NB09}/emb_resid.npz", allow_pickle=True)["group_keys"])
@@ -45,7 +45,7 @@ def load_survey():
 
 
 def clean_subset(real, idx):
-    """Buang sel yang bikin pasangan NaN (per tipe), seperti notebook 10."""
+    """Drop cells that create NaN pairs (per type), as in notebook 10."""
     idx = list(idx)
     while True:
         sub = real[np.ix_(idx, idx)]
@@ -58,17 +58,17 @@ def clean_subset(real, idx):
 
 
 def spearman_matrix(D_rows, target):
-    """Spearman tiap baris D_rows (n_loc, n_pair) lawan target (n_pair,)."""
+    """Spearman of each row of D_rows (n_loc, n_pair) vs target (n_pair,)."""
     rt = rankdata(target)
     rt = (rt - rt.mean()) / rt.std()
     rr = np.apply_along_axis(rankdata, 1, D_rows)
-    with np.errstate(invalid="ignore"):   # baris konstan (mis. resid layer 0) -> NaN
+    with np.errstate(invalid="ignore"):   # constant row (e.g. resid layer 0) -> NaN
         rr = (rr - rr.mean(1, keepdims=True)) / rr.std(1, keepdims=True)
     return rr @ rt / len(target)
 
 
 def cosine_rows(X):
-    """X (n_loc, n_cell, d) -> jarak cosine per lokasi (n_loc, n_pair)."""
+    """X (n_loc, n_cell, d) -> cosine distance per location (n_loc, n_pair)."""
     Xn = X / (np.linalg.norm(X, axis=2, keepdims=True) + 1e-8)
     sims = np.einsum("lcd,lkd->lck", Xn, Xn)
     n = X.shape[1]
@@ -101,10 +101,10 @@ def analyse_map(emb_heads, emb_resid, real, types, tag, n_perm=N_PERM):
         best = int(np.nanargmax(rho_h))
         bl, bh = divmod(best, H)
 
-        # max-stat permutation (acak label sel, juara lawan juara)
+        # max-stat permutation (shuffle cell labels, winner vs winner)
         null_max = np.empty(n_perm)
         m = len(idx)
-        ia, ib = iu  # indeks pasangan (di dalam subset)
+        ia, ib = iu  # pair indices (within the subset)
         rr = np.apply_along_axis(rankdata, 1, D)
         rr = (rr - rr.mean(1, keepdims=True)) / rr.std(1, keepdims=True)
         for p in range(n_perm):
@@ -115,22 +115,22 @@ def analyse_map(emb_heads, emb_resid, real, types, tag, n_perm=N_PERM):
             null_max[p] = (rr @ rt / len(target)).max()
         p_corr = float((null_max >= rho_h[best]).mean())
 
-        # held-out template (pilih di 3, ukur di 1, rata-rata 4 fold).
-        # CATATAN: varian ini memilih head lewat rata-rata EMBEDDING 3
-        # template (bukan prosedur cek1 notebook 10 persis), jadi angkanya
-        # sedikit lebih konservatif. Pakai HANYA utk perbandingan
-        # antar-checkpoint (pipeline sama) -- jangan disandingkan langsung
-        # dgn kolom heldout finding 06.
+        # held-out template (select on 3, measure on 1, mean of 4 folds).
+        # NOTE: this variant picks the head via the mean EMBEDDING of 3
+        # templates (not exactly the cek1 procedure of notebook 10), so the
+        # numbers are a little more conservative. Use ONLY for
+        # cross-checkpoint comparison (same pipeline) -- do not place it
+        # directly next to the heldout column of finding 06.
         ho = []
         for t_out in range(4):
             t_in = [t for t in range(4) if t != t_out]
             Xi = emb_heads[t_in].astype(np.float32).mean(0)[idx]
             Di = cosine_rows(Xi.reshape(len(idx), L * H, dh).transpose(1, 0, 2))
-            sel = int(np.nanargmax(spearman_matrix(Di, target)))
+            selected = int(np.nanargmax(spearman_matrix(Di, target)))
             Xo = emb_heads[t_out].astype(np.float32)[idx]
-            Do = cosine_rows(Xo.reshape(len(idx), L * H, dh).transpose(1, 0, 2)[sel:sel + 1])
+            Do = cosine_rows(Xo.reshape(len(idx), L * H, dh).transpose(1, 0, 2)[selected:selected + 1])
             ho.append(float(spearman_matrix(Do, target)[0]))
-        rows.append(dict(model=tag, tipe=ty, n_sel=len(idx),
+        rows.append(dict(model=tag, type=ty, n_cells=len(idx),
                          resid_best=float(resid_best),
                          head_best=float(rho_h[best]), head_loc=f"L{bl} H{bh}",
                          null_p95=float(np.percentile(null_max, 95)),
@@ -140,7 +140,7 @@ def analyse_map(emb_heads, emb_resid, real, types, tag, n_perm=N_PERM):
     return pd.DataFrame(rows)
 
 
-# ---------- kesetiaan output (mulut) ----------
+# ---------- output fidelity (the mouth) ----------
 def analyse_mouth(csv_path, real, keys, types, tag):
     raw = pd.read_csv(data_path("opinionqa_intersectional.csv"))
     raw["ordinal"] = raw["ordinal"].apply(ast.literal_eval)
@@ -154,12 +154,12 @@ def analyse_mouth(csv_path, real, keys, types, tag):
     key_index = {k: i for i, k in enumerate(keys)}
     rows = []
     for ty, g in d.groupby("ty"):
-        # akurasi absolut mulut
+        # absolute mouth accuracy
         wds = []
         for r in g.itertuples():
             pr, od = REAL[(r.gk, r.qk)]
             wds.append(wasserstein_distance(od, od, u_weights=r.p, v_weights=pr))
-        # RDM output antar sel
+        # output RDM across cells
         cells = sorted(g.gk.unique())
         pred_by = {(r.gk, r.qk): r.p for r in g.itertuples()}
         q_by = g.groupby("gk")["qk"].apply(set).to_dict()
@@ -183,9 +183,9 @@ def analyse_mouth(csv_path, real, keys, types, tag):
         ok = ~np.isnan(sub_real[iu]) & ~np.isnan(out_rdm[iu])
         from scipy.stats import spearmanr
         rho = float(spearmanr(sub_real[iu][ok], out_rdm[iu][ok]).statistic)
-        rows.append(dict(model=tag, tipe=ty, wd_mulut=float(np.mean(wds)),
+        rows.append(dict(model=tag, type=ty, wd_mouth=float(np.mean(wds)),
                          rho_output=rho, n_pair=int(ok.sum())))
-        print(f"  [{tag}|{ty}] WD mulut {np.mean(wds):.4f} | rho output {rho:+.3f}")
+        print(f"  [{tag}|{ty}] WD mouth {np.mean(wds):.4f} | rho output {rho:+.3f}")
     return pd.DataFrame(rows)
 
 
@@ -193,16 +193,16 @@ if __name__ == "__main__":
     real, keys, types = load_survey()
 
     if "--selftest" in sys.argv:
-        print("=== SELFTEST di data Mistral (notebook 09) ===")
+        print("=== SELFTEST on the Mistral data (notebook 09) ===")
         eh = np.load(f"{NB09}/emb_heads.npz")["emb"]
         er = np.load(f"{NB09}/emb_resid.npz")["emb"]
         res = analyse_map(eh, er, real, types, "mistral", n_perm=500)
         print(res.round(3).to_string(index=False))
-        print("\nBandingkan dgn finding 05/06: AGE head ~0.74 (L11 H19), "
+        print("\nCompare with finding 05/06: AGE head ~0.74 (L11 H19), "
               "resid ~0.51; EDU 0.68/0.61; RELIGxPP 0.60 (L11 H16)/0.26.")
         sys.exit(0)
 
-    pass  # results_dir() sudah bikin folder
+    pass  # results_dir() already created the folder
     maps, mouths = [], []
     for tag in ["base", "mid", "osim"]:
         print(f"=== {tag} ===")
@@ -214,7 +214,7 @@ if __name__ == "__main__":
     U = pd.concat(mouths)
     M.to_csv(f"{NB15}/map_summary.csv", index=False)
     U.to_csv(f"{NB15}/mouth_summary.csv", index=False)
-    print("\n=== PETA (per checkpoint) ===")
+    print("\n=== MAP (per checkpoint) ===")
     print(M.round(3).to_string(index=False))
-    print("\n=== MULUT (per checkpoint) ===")
+    print("\n=== MOUTH (per checkpoint) ===")
     print(U.round(3).to_string(index=False))

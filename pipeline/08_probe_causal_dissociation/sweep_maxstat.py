@@ -1,14 +1,14 @@
-"""Koreksi max-statistic permutation buat sweep per-layer.
+"""Max-statistic permutation correction for the per-layer sweep.
 
-Dipakai dua kali:
-  1. data notebook 13 (3 tipe lama) -> harus mereproduksi ambang finding 09
-     (2.905 / 2.906 / 2.918). Ini validasi implementasi.
-  2. data notebook 14 Part B (3 tipe baru) -> finding 11.
+Used twice:
+  1. notebook 13 data (3 old attribute types) -> must reproduce the finding
+     09 thresholds (2.905 / 2.906 / 2.918). This validates the implementation.
+  2. notebook 14 Part B data (3 new attribute types) -> finding 11.
 
-Null: sign-flip berpasangan. Tiap item (pasangan-soal) dikali +1/-1 acak,
-flip yang SAMA dipakai di semua 32 layer supaya struktur korelasi antar
-layer ikut terjaga. Statistik per layer = t berpasangan (patch vs kontrol
-layer-acak); statistik juara = max t atas 32 layer.
+Null: paired sign-flip. Every item (pair-question) is multiplied by a random
++1/-1, and the SAME flip is used across all 32 layers so that the correlation
+structure between layers is preserved too. Per-layer statistic = paired t
+(patch vs random-layer control); winner statistic = max t over 32 layers.
 """
 import sys
 from pathlib import Path as _Path
@@ -25,7 +25,7 @@ SEED = 42
 
 def analyse(path, label):
     d = pd.read_csv(path)
-    d["diff"] = d["shift_ke_realB"] - d["shift_ctrl_ke_realB"]
+    d["diff"] = d["shift_to_realB"] - d["shift_ctrl_to_realB"]
     d["item"] = d["pair"] + " || " + d["qkey"]
     out = []
     for ty, g in d.groupby("attr_type"):
@@ -62,10 +62,10 @@ if __name__ == "__main__":
     NB07 = results_dir("07_sweep_and_probe")
     NB08 = results_dir("08_probe_causal_dissociation")
     old = analyse(f"{NB07}/sweep_rows.csv",
-                  "VALIDASI: data notebook 13 (harus cocok finding 09)")
+                  "VALIDATION: notebook 13 data (must match finding 09)")
     new = analyse(f"{NB08}/sweep6_rows.csv",
-                  "BARU: data notebook 14 Part B (finding 11)")
+                  "NEW: notebook 14 Part B data (finding 11)")
     if len(sys.argv) > 1 and sys.argv[1] == "--save":
         outdir = NB08
         new.to_csv(f"{outdir}/sweep6_maxstat.csv", index=False)
-        print("\ndisimpan ->", f"{outdir}/sweep6_maxstat.csv")
+        print("\nsaved ->", f"{outdir}/sweep6_maxstat.csv")

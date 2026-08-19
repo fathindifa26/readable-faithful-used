@@ -1,17 +1,17 @@
-"""Review ronde 2, R1: apakah kesimpulan disosiasi tahan terhadap
-pilihan penggaris kesetiaan?
+"""Review round 2, R1: does the dissociation conclusion survive the
+choice of fidelity ruler?
 
-Tiga estimator kesetiaan per tipe:
-  (a) split-half median (yang dipakai fig_fidelity_vs_causal),
-  (b) partial-lexical (kontrol gema kata-kata, varian 'nilai' -- yang
-      dilaporkan app:lexical),
+Three fidelity estimators per attribute type:
+  (a) split-half median (the one used by fig_fidelity_vs_causal),
+  (b) partial-lexical (controls for word echo, the 'value' variant -- the
+      one reported in app:lexical),
   (c) held-out template.
-Untuk tiap estimator: Spearman vs t kausal level-pasangan di (i) lokus
-a-priori L11, (ii) layer juara tiap tipe.
+For each estimator: Spearman vs the pair-level causal t at (i) the
+a-priori locus L11, (ii) the winning layer of each type.
 
-Plus A3 tambahan: kontras langsung RELIGxPOLPARTY vs RACExPOLIDEOLOGY
-(bootstrap CI selisih t + permutasi 2-sampel) -- karena di bawah penggaris
-partial, RELIGxPP naik jadi tipe paling setia (bareng AGE).
+Plus an extra A3: direct contrast RELIGxPOLPARTY vs RACExPOLIDEOLOGY
+(bootstrap CI of the t difference + 2-sample permutation) -- because under
+the partial ruler, RELIGxPP rises to the most faithful type (tied with AGE).
 
 Output: notebooks/output/14_.../r1_ruler_sensitivity.csv (+ print).
 """
@@ -33,21 +33,21 @@ NB07 = results_dir("07_sweep_and_probe")
 TYPES = ["AGExPOLPARTY", "EDUCATIONxINCOME", "RELIGxPOLPARTY",
          "RACExPOLPARTY", "RACExPOLIDEOLOGY", "RACExRELIG"]
 
-pl = pd.read_csv(f"{OUT}/causal_pairlevel_sweep.csv").set_index("tipe")
+pl = pd.read_csv(f"{OUT}/causal_pairlevel_sweep.csv").set_index("type")
 lex = pd.read_csv(f"{OUT}/lexical_partial.csv")
-lex = lex[lex.lex == "nilai"].set_index("tipe")
+lex = lex[lex.lex == "value"].set_index("type")
 
-# (a) split-half median -- sumber sama dgn figur
-sh = pd.read_csv(f"{NB04}/koreksi_seleksi/cek3_splithalf.csv")
+# (a) split-half median -- same source as the figure
+sh = pd.read_csv(f"{NB04}/selection_correction/check3_splithalf.csv")
 sh = sh.set_index("attr_type")["heldout_median"]
 
 rulers = {
     "split-half": sh,
     "partial-lexical": lex["partial_star"],
-    "held-out-template": None,  # diisi di bawah kalau ada
+    "held-out-template": None,  # filled in below if available
 }
 try:
-    ho = pd.read_csv(f"{NB04}/koreksi_seleksi/cek1_heldout_template.csv")
+    ho = pd.read_csv(f"{NB04}/selection_correction/check1_heldout_template.csv")
     rulers["held-out-template"] = ho.set_index("attr_type")["heldout_mean"]
 except FileNotFoundError:
     del rulers["held-out-template"]
@@ -62,16 +62,16 @@ for name, fid in rulers.items():
                          rho=round(float(r.statistic), 3),
                          p=round(float(r.pvalue), 3)))
         print(f"[{name:>18} vs {lab}] rho={r.statistic:+.3f} p={r.pvalue:.3f}")
-    print("  urutan kesetiaan:", " > ".join(fid[TYPES].sort_values(ascending=False).index))
+    print("  fidelity ordering:", " > ".join(fid[TYPES].sort_values(ascending=False).index))
 
 pd.DataFrame(rows).to_csv(f"{OUT}/r1_ruler_sensitivity.csv", index=False)
 
-# ---- A3 tambahan: RELIGxPP vs RACExPI --------------------------------------
+# ---- extra A3: RELIGxPP vs RACExPI -----------------------------------------
 SEED = 42
 rng = np.random.default_rng(SEED)
 d = pd.concat([pd.read_csv(f"{NB07}/sweep_rows.csv"),
                pd.read_csv(f"{OUT}/sweep6_rows.csv")])
-d["diff"] = d.shift_ke_realB - d.shift_ctrl_ke_realB
+d["diff"] = d.shift_to_realB - d.shift_ctrl_to_realB
 
 
 def tstat(x):
@@ -105,9 +105,9 @@ def diff_test(tyA, layA, tyB, layB, n_boot=10000):
                 ci_hi=round(hi, 3), p_perm2s=cnt / 10000)
 
 
-print("\n=== A3 tambahan: RELIGxPP (paling setia di penggaris partial) vs RACExPI ===")
-tests = [("RELIGxPOLPARTY", 8, "RACExPOLIDEOLOGY", 11),   # layer juara masing2
-         ("RELIGxPOLPARTY", 11, "RACExPOLIDEOLOGY", 11)]  # lokasi tetap L11
+print("\n=== extra A3: RELIGxPP (most faithful under the partial ruler) vs RACExPI ===")
+tests = [("RELIGxPOLPARTY", 8, "RACExPOLIDEOLOGY", 11),   # each winning layer
+         ("RELIGxPOLPARTY", 11, "RACExPOLIDEOLOGY", 11)]  # fixed location L11
 res = pd.DataFrame([diff_test(*t) for t in tests])
 print(res.to_string(index=False))
 res.to_csv(f"{OUT}/r1_religpp_vs_racepi.csv", index=False)

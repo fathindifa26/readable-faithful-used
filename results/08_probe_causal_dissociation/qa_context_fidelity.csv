@@ -1,4 +1,4 @@
-tipe,n_sel,n_soal_rata2_per_sel,n_soal_bersama_min,n_soal_bersama_rata2,n_soal_umum_semua_sel,rho_identity_only,rho_qa_context,rho_qa_shared_q,rho_qa_common_q,rho_qa_nmatched,reliabilitas_rdm_v3
+type,n_cells,n_questions_mean_per_cell,n_shared_questions_min,n_shared_questions_mean,n_questions_common_to_all_cells,rho_identity_only,rho_qa_context,rho_qa_shared_q,rho_qa_common_q,rho_qa_nmatched,rdm_reliability_v3
 AGExPOLPARTY,18,225.05555555555554,21,201.98039215686273,21,0.6653197164033076,0.7249507458485787,0.3802453995952448,0.39425435245868684,0.17917179486068008,0.9757938724263822
 EDUCATIONxINCOME,33,221.4848484848485,15,196.63636363636363,15,0.6686292825341836,0.4582840534258032,0.11588274155493854,0.09926203802171238,0.09051701424079028,
 RELIGxPOLPARTY,30,196.8,20,156.1264367816092,20,0.599656382437454,0.6607236524637102,0.2847400498770433,0.22819167271860835,0.33999175099206197,0.9813355790962607

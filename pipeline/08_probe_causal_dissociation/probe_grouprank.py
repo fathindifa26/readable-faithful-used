@@ -1,17 +1,19 @@
-"""Uji pembeda-kelompok yang BERSIH dari artefak leave-one-out.
+"""Group-discrimination test that is CLEAN of the leave-one-out artefact.
 
-Masalah versi sebelumnya: probe dilatih leave-one-cell-out, jadi prediksi
-tiap sel dihitung dari model yang TIDAK melihat sel itu. Akibatnya prediksi
-otomatis anti-korelasi dengan sel yang ditinggalkan (baseline rata-rata soal
-versi LOO dapat grouprank -0.99 -- murni artefak, bukan sinyal).
+Problem with the previous version: the probe was trained leave-one-cell-out,
+so each cell's prediction came from a model that did NOT see that cell. As a
+result the prediction is automatically anti-correlated with the held-out cell
+(the LOO version of the question-mean baseline gets grouprank -0.99 -- pure
+artefact, not signal).
 
-Perbaikan: belah sel jadi dua bagian. Latih di bagian A, prediksi SEMUA sel
-bagian B dengan model yang sama, lalu hitung korelasi urutan kelompok di
-dalam B saja. Tukar A/B, rata-ratakan. Tidak ada struktur LOO sama sekali.
+Fix: split the cells into two halves. Train on half A, predict ALL cells of
+half B with that same model, then compute the group-ordering correlation
+within B only. Swap A/B, average. No LOO structure at all.
 
-Metrik: per soal, Spearman antara "rata-rata opini" prediksi per sel vs versi
-asli per sel (dalam separuh yang diuji), lalu dirata-rata antar soal.
-Pembanding "mulut" dihitung di subset sel yang sama persis.
+Metric: per question, Spearman between the predicted per-cell "mean opinion"
+and the real per-cell version (within the evaluated half), then averaged
+across questions. The "mouth" comparison is computed on the exact same
+subset of cells.
 """
 import ast
 
@@ -65,7 +67,7 @@ for ty in TYPES:
         return W @ o
 
     def grouprank(P, eval_idx):
-        """rata-rata Spearman per soal, hanya di baris eval_idx."""
+        """Mean per-question Spearman, on the eval_idx rows only."""
         keep = np.zeros(len(P), bool)
         keep[eval_idx] = True
         out = []
@@ -83,14 +85,14 @@ for ty in TYPES:
 
     cells = np.array(sorted(set(gk)))
     rng = np.random.default_rng(SEED)
-    acc = {k: [] for k in list(feats) + ["mulut"]}
+    acc = {k: [] for k in list(feats) + ["mouth"]}
     for rep in range(N_SPLIT):
         perm = rng.permutation(len(cells))
         halves = [set(cells[perm[:len(cells) // 2]]), set(cells[perm[len(cells) // 2:]])]
         for train_cells in halves:
             tr = np.array([i for i in range(n) if gk[i] in train_cells])
             te = np.array([i for i in range(n) if gk[i] not in train_cells])
-            acc["mulut"] += grouprank(mouth, te)
+            acc["mouth"] += grouprank(mouth, te)
             for name, X in feats.items():
                 if X.shape[1] > N_PC:
                     pca = PCA(n_components=N_PC, svd_solver="randomized",
@@ -102,16 +104,16 @@ for ty in TYPES:
                 P = np.zeros((n, 6), np.float32)
                 P[te] = Ridge(alpha=ALPHA).fit(Xtr, Y[tr]).predict(Xte)
                 acc[name] += grouprank(P, te)
-    row = dict(tipe=ty, n_sel=len(cells))
+    row = dict(type=ty, n_cells=len(cells))
     for k, v in acc.items():
         v = np.array(v)
         row[f"gr_{k}"] = v.mean()
         row[f"gr_{k}_se"] = v.std(ddof=1) / np.sqrt(len(v))
     rows.append(row)
-    print(f"[{ty}] mulut {row['gr_mulut']:+.3f}  L11 {row['gr_L11']:+.3f}  "
+    print(f"[{ty}] mouth {row['gr_mouth']:+.3f}  L11 {row['gr_L11']:+.3f}  "
           f"L1 {row['gr_L1']:+.3f}  H16 {row['gr_L11H16']:+.3f}")
 
 res = pd.DataFrame(rows)
 res.to_csv(f"{OUT}/probe_v2_grouprank.csv", index=False)
-print("\n=== PEMBEDA KELOMPOK (belah-dua, bebas artefak LOO) ===")
+print("\n=== GROUP DISCRIMINATION (split-half, free of the LOO artefact) ===")
 print(res.round(4).to_string(index=False))

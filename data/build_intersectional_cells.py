@@ -1,25 +1,27 @@
-"""Bangun tabel sel demografi IRISAN (2 atribut) dari data respons individual
-Pew ATP mentah, format sama seperti opinionqa.csv (qkey, attribute, group,
-responses, ordinal, question, options) tapi 'group' sekarang kombinasi 2
-atribut, mis. 'White | Protestant'.
+"""Build the INTERSECTIONAL (2-attribute) demographic cell table from raw
+Pew ATP individual-response data, same format as opinionqa.csv (qkey,
+attribute, group, responses, ordinal, question, options) but 'group' is
+now a combination of 2 attributes, e.g. 'White | Protestant'.
 
-Dibuat buat follow-up Tahap 0 (lihat notes/research_question/03_pivot2_group_consistency.md §12.9/§12.10):
-tes RSA sebelumnya (notebooks/06_tahap0_rsa_kaggle.ipynb) cuma pakai
-kelompok 1-atribut sebagai proxy; ini bikin data buat tes ulang pakai sel
-irisan asli (mis. "Black Hindu"), target sebenarnya dari `L_group`.
+Made for the Stage 0 follow-up (see notes/research_question/03_pivot2_group_consistency.md §12.9/§12.10):
+the earlier RSA test (pipeline/01_rsa_pilot/notebook.ipynb) only used
+1-attribute groups as a proxy; this builds the data to re-run the test on
+real intersectional cells (e.g. "Black Hindu"), the true target of
+`L_group`.
 
-Sumber: data/opinionqa_original/data/human_resp/<wave>/{responses.csv,info.csv}
-  (unduh dulu -- lihat data/README.md, tidak ikut repo karena lisensi Pew ATP)
+Source: data/opinionqa_original/data/human_resp/<wave>/{responses.csv,info.csv}
+  (download it first -- see data/README.md, not shipped with the repo
+  because of the Pew ATP licence)
 Output: data/opinionqa_intersectional.csv
 
-Jalankan dari root repo: python data/build_intersectional_cells.py
+Run from the repo root: python data/build_intersectional_cells.py
 """
 import ast
 import glob
 import os
 import pandas as pd
 
-# BASE = folder data/ ini sendiri (bukan root repo) -- lihat data/README.md
+# BASE = this data/ folder itself (not the repo root) -- see data/README.md
 BASE = os.path.dirname(os.path.abspath(__file__))
 WAVE_DIRS = sorted(glob.glob(os.path.join(BASE, "opinionqa_original/data/human_resp/American_Trends_Panel_W*")))
 PEW_WAVES = [int(d.split("_W")[-1]) for d in WAVE_DIRS]
@@ -32,7 +34,7 @@ ATTR_PAIRS = [
     ("EDUCATION", "INCOME"),
     ("AGE", "POLPARTY"),
 ]
-N_THRESHOLD = 30  # ambang jumlah responden minimal per sel irisan (dalam 1 wave)
+N_THRESHOLD = 30  # min. respondents per intersectional cell (within 1 wave)
 
 OUT_PATH = os.path.join(BASE, "opinionqa_intersectional.csv")
 
@@ -52,7 +54,7 @@ def process_wave(wave_dir, wave_num):
 
     weight_col = f"WEIGHT_W{wave_num}"
     if weight_col not in responses.columns:
-        print(f"  [skip wave {wave_num}] tidak ada kolom {weight_col}")
+        print(f"  [skip wave {wave_num}] no {weight_col} column")
         return []
 
     rows = []
@@ -63,7 +65,7 @@ def process_wave(wave_dir, wave_num):
         sub = responses[[attr1, attr2, weight_col]].copy()
         sub["group_label"] = sub[attr1].astype(str) + " | " + sub[attr2].astype(str)
 
-        # buang baris dengan atribut kosong/NaN
+        # drop rows with an empty/NaN attribute
         valid = sub[attr1].notna() & sub[attr2].notna()
         sub = sub[valid]
 
@@ -115,20 +117,20 @@ def process_wave(wave_dir, wave_num):
 def main():
     all_rows = []
     for d, w in zip(WAVE_DIRS, PEW_WAVES):
-        print(f"Proses wave {w} ...")
+        print(f"Processing wave {w} ...")
         rows = process_wave(d, w)
-        print(f"  -> {len(rows)} baris (qkey x sel irisan)")
+        print(f"  -> {len(rows)} rows (qkey x intersectional cell)")
         all_rows.extend(rows)
 
     df = pd.DataFrame(all_rows)
     df.to_csv(OUT_PATH, index=False)
-    print(f"\nTotal baris: {len(df)}")
-    print(f"Kombinasi atribut: {sorted(df['attribute'].unique().tolist())}")
-    print(f"Jumlah sel irisan unik: {df['group'].nunique()}")
-    print(f"Jumlah qkey unik: {df['qkey'].nunique()}")
-    print(f"\nDisimpan ke: {OUT_PATH}")
+    print(f"\nTotal rows: {len(df)}")
+    print(f"Attribute combinations: {sorted(df['attribute'].unique().tolist())}")
+    print(f"Unique intersectional cells: {df['group'].nunique()}")
+    print(f"Unique qkeys: {df['qkey'].nunique()}")
+    print(f"\nSaved to: {OUT_PATH}")
 
-    print("\nJumlah sel per kombinasi atribut:")
+    print("\nCells per attribute combination:")
     print(df.groupby("attribute")["group"].nunique())
 
 

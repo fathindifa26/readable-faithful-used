@@ -1,21 +1,23 @@
-"""Review A6 / R8.2: ceiling identity-swap di base vs INSTRUCT.
+"""Review A6 / R8.2: identity-swap ceiling in base vs INSTRUCT.
 
-Klaim paper 6.1 ("output nyaris tak berubah saat seluruh identitas
-diganti") diukur di Mistral-7B base. Reviewer: bisa jadi properti
-interface (base + letter readout), bukan properti model. Notebook 16
-mengukur mulut Mistral-7B-v0.1 (prompt mentah) vs
-Mistral-7B-Instruct-v0.2 (chat template) pada sel & soal yang sama.
+The paper's 6.1 claim ("the output barely changes when the whole
+identity is swapped") was measured on Mistral-7B base. Reviewer: this
+could be a property of the interface (base + letter readout), not of the
+model. Notebook 16 measures the mouth of Mistral-7B-v0.1 (raw prompt) vs
+Mistral-7B-Instruct-v0.2 (chat template) on the same cells & questions.
 
-Per model x tipe, atas pasangan sel setipe (A,B) terurut di soal bersama:
+Per model x type, over ordered same-type cell pairs (A,B) on shared
+questions:
 - ceiling  : mean_q [ wd(predA, realB) - wd(predB, realB) ]
-             (persis definisi 6.1: seberapa jauh prediksi bergerak
-             saat SELURUH identitas diganti, diukur relatif ke truth B)
+             (exactly the 6.1 definition: how far the prediction moves
+             when the WHOLE identity is swapped, measured relative to
+             truth B)
 - adv (D2) : mean_q [ wd(predA, realB) - wd(predA, realA) ]
-             (>0 = prediksi A lebih dekat ke truth A sendiri);
-             median + sign test level PASANGAN (bukan item).
-- wd_abs   : akurasi absolut mean wd(pred, real).
+             (>0 = prediction A is closer to its own truth A);
+             median + sign test at the PAIR level (not the item level).
+- wd_abs   : absolute accuracy, mean wd(pred, real).
 
-Output: notebooks/output/16_ceiling_instruct_kaggle/analisis/ceiling_summary.csv
+Output: results/10_ceiling_instruct_check/analisis/ceiling_summary.csv
 """
 import ast
 import itertools
@@ -49,7 +51,7 @@ for tag in ["mistral_base", "mistral_instruct"]:
     q_by = d.groupby("gk")["qk"].apply(set).to_dict()
 
     for ty, g in d.groupby("ty"):
-        # akurasi absolut
+        # absolute accuracy
         wd_abs = np.mean([wasserstein_distance(REAL[(r.gk, r.qk)][1],
                                                REAL[(r.gk, r.qk)][1],
                                                u_weights=r.p,
@@ -77,7 +79,7 @@ for tag in ["mistral_base", "mistral_instruct"]:
         ceil_pair, adv_pair = np.array(ceil_pair), np.array(adv_pair)
         n_pos = int((adv_pair > 0).sum())
         p_sign = binomtest(n_pos, len(adv_pair)).pvalue
-        rows.append(dict(model=tag, tipe=ty, n_pair=len(ceil_pair),
+        rows.append(dict(model=tag, type=ty, n_pair=len(ceil_pair),
                          wd_abs=round(float(wd_abs), 4),
                          ceiling=round(float(np.mean(ceil_pair)), 4),
                          ceiling_pct=round(float(np.mean(ceil_pair)) / float(wd_abs) * 100, 2),
@@ -90,5 +92,5 @@ for tag in ["mistral_base", "mistral_instruct"]:
 
 res = pd.DataFrame(rows)
 res.to_csv(f"{OUT_DIR}/ceiling_summary.csv", index=False)
-print("\n== ringkasan per model (rata-rata antar tipe) ==")
+print("\n== summary per model (mean across types) ==")
 print(res.groupby("model")[["wd_abs", "ceiling", "ceiling_pct", "frac_adv_pos"]].mean().round(4).to_string())

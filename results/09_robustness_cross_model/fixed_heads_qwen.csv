@@ -1,4 +1,4 @@
-model,head,tipe,rho,p_raw
+model,head,type,rho,p_raw
 base,L9 H30,AGExPOLPARTY,0.36,0.001
 base,L9 H30,EDUCATIONxINCOME,0.147,0.05
 base,L9 H30,RACExPOLIDEOLOGY,0.586,0.0

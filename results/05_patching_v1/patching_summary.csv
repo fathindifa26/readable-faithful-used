@@ -1,4 +1,4 @@
-attr_type,condition,n,mean_shift_ke_realB,persen_positif,p_wilcoxon_vs_random
+attr_type,condition,n,mean_shift_to_realB,pct_positive,p_wilcoxon_vs_random
 AGExPOLPARTY,patch_L11H16,375,2.4353679384613893e-05,0.344,0.7099166553826419
 AGExPOLPARTY,patch_L18H14,375,5.098730873589097e-05,0.264,0.1853958084025633
 AGExPOLPARTY,patch_top3,375,0.00010128813909198272,0.37333333333333335,0.08666523756011685

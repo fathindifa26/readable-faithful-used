@@ -1,13 +1,13 @@
-"""Review B4: dua cek fairness untuk hasil probe (finding 10 v2).
+"""Review B4: two fairness checks for the probe results (finding 10 v2).
 
-1. KALIBRASI: "probe 22-30% lebih dekat dari mulut" bisa cuma karena mulut
-   miskalibrasi (softmax letter-logits terlalu datar/lancip), sedangkan
-   ridge otomatis belajar skala benar. Baseline adil: mulut + TEMPERATURE
-   SCALING (1 parameter, di-fit di fold training, dievaluasi leave-one-cell-
-   out seperti probe).
-2. BOTTLENECK TAK SIMETRIS: L11 penuh direduksi PCA-128, head dipakai utuh
-   128 dim. "Single head does the work" bisa artefak bottleneck. Tambah:
-   ridge di L11 PENUH 4096-dim tanpa PCA.
+1. CALIBRATION: "the probe is 22-30% closer than the mouth" could be purely
+   because the mouth is miscalibrated (softmax over letter-logits too flat or
+   too peaked), whereas ridge automatically learns the right scale. A fair
+   baseline: mouth + TEMPERATURE SCALING (1 parameter, fitted on the training
+   fold, evaluated leave-one-cell-out just like the probe).
+2. ASYMMETRIC BOTTLENECK: the full L11 is reduced by PCA to 128, while the
+   head is used whole at 128 dim. "Single head does the work" could be a
+   bottleneck artefact. Add: ridge on the FULL 4096-dim L11 without PCA.
 
 Output: notebooks/output/14_.../probe_fairness.csv
 """
@@ -29,7 +29,7 @@ OUT = results_dir("08_probe_causal_dissociation")
 TYPES = ["AGExPOLPARTY", "EDUCATIONxINCOME", "RELIGxPOLPARTY",
          "RACExPOLPARTY", "RACExPOLIDEOLOGY", "RACExRELIG"]
 TEMPS = np.concatenate([np.arange(0.2, 1.0, 0.1), np.arange(1.0, 5.1, 0.25)])
-ALPHA_FULL = 100.0   # dim lebih besar -> regularisasi lebih besar (tetap fair)
+ALPHA_FULL = 100.0   # more dims -> more regularisation (still fair)
 
 raw = pd.read_csv(data_path("opinionqa_intersectional.csv"))
 raw["ordinal"] = raw["ordinal"].apply(ast.literal_eval)
@@ -78,7 +78,7 @@ for ty in TYPES:
         return Q
 
     cells = sorted(set(gk))
-    # pre-hitung WD per baris utk tiap T sekali saja (temp_apply tak tergantung fold)
+    # pre-compute per-row WD for each T once (temp_apply does not depend on fold)
     wd_by_T = {}
     for T in TEMPS:
         Q = temp_apply(mouth, T)
@@ -96,28 +96,28 @@ for ty in TYPES:
         te = np.where(gk == cell)[0]
         tr_mask = gk != cell
         tr = np.where(tr_mask)[0]
-        # (1) temperature scaling: fit T di training fold (pakai pre-hitung)
+        # (1) temperature scaling: fit T on the training fold (use pre-computed)
         best_T = min(TEMPS, key=lambda T: wd_by_T[T][1][tr_mask].mean())
         temps_used.append(best_T)
         pred_temp[te] = wd_by_T[best_T][0][te]
-        # (2) ridge L11 PENUH tanpa PCA
+        # (2) ridge on the FULL L11 without PCA
         mu = X11[tr].mean(0)
         pred_full[te] = Ridge(alpha=ALPHA_FULL).fit(X11[tr] - mu, Y[tr]).predict(X11[te] - mu)
 
     allidx = range(n)
-    rows.append(dict(tipe=ty, n=n,
-                     wd_mulut=wd_mean(mouth, allidx),
-                     wd_mulut_temp=wd_mean(pred_temp, allidx),
+    rows.append(dict(type=ty, n=n,
+                     wd_mouth=wd_mean(mouth, allidx),
+                     wd_mouth_temp=wd_mean(pred_temp, allidx),
                      T_median=float(np.median(temps_used)),
                      wd_L11_fullridge=wd_mean(pred_full, allidx)))
-    print(f"[{ty}] {time.time()-t0:.0f}s mulut {rows[-1]['wd_mulut']:.4f} | "
-          f"mulut+temp {rows[-1]['wd_mulut_temp']:.4f} (T~{rows[-1]['T_median']:.2f}) | "
+    print(f"[{ty}] {time.time()-t0:.0f}s mouth {rows[-1]['wd_mouth']:.4f} | "
+          f"mouth+temp {rows[-1]['wd_mouth_temp']:.4f} (T~{rows[-1]['T_median']:.2f}) | "
           f"L11 full-ridge {rows[-1]['wd_L11_fullridge']:.4f}")
 
 res = pd.DataFrame(rows)
-# gabung dgn hasil lama biar sebanding dalam satu tabel
-old = pd.read_csv(f"{OUT}/probe_v2_summary.csv")[["tipe", "wd_L11", "wd_L11H16", "wd_qmean"]]
-res = res.merge(old, on="tipe")
+# merge with the older results so everything is comparable in one table
+old = pd.read_csv(f"{OUT}/probe_v2_summary.csv")[["type", "wd_L11", "wd_L11H16", "wd_qmean"]]
+res = res.merge(old, on="type")
 res.to_csv(f"{OUT}/probe_fairness.csv", index=False)
 print()
 print(res.round(4).to_string(index=False))

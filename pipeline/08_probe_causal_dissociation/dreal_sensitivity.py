@@ -1,15 +1,15 @@
-"""Review B2: sensitivitas konstruksi D_real (penggaris survei).
+"""Review B2: sensitivity of the D_real construction (the survey ruler).
 
-Dua kritik:
-(a) WD antar distribusi ordinal tergantung PANJANG skala (soal 2-opsi vs
-    6-opsi) -> soal berskala panjang mendominasi rata-rata.
-    Varian: WD dinormalisasi rentang skala, WD/(max(ordinal)-min(ordinal)).
-(b) Tiap pasangan dirata-rata atas HIMPUNAN SOAL BERBEDA -> entri RDM tak
-    sebanding antar pasangan.
-    Varian: batasi ke soal yang dijawab SEMUA sel dalam satu tipe.
+Two criticisms:
+(a) WD between ordinal distributions depends on SCALE LENGTH (2-option vs
+    6-option questions) -> long-scale questions dominate the mean.
+    Variant: WD normalised by scale range, WD/(max(ordinal)-min(ordinal)).
+(b) Each pair is averaged over a DIFFERENT SET OF QUESTIONS -> RDM entries
+    are not comparable across pairs.
+    Variant: restrict to the questions answered by ALL cells within a type.
 
-Untuk tiap varian penggaris, hitung ulang kesetiaan di L11 H16 dan head
-terbaik per tipe. Kalau kesimpulan bertahan -> jadi appendix sensitivitas.
+For each ruler variant, recompute fidelity at L11 H16 and at the best head
+per type. If the conclusion holds -> it becomes a sensitivity appendix.
 
 Output: notebooks/output/14_.../dreal_sensitivity.csv
 """
@@ -46,10 +46,10 @@ QSET = raw.groupby("gk")["qkey"].apply(set).to_dict()
 
 
 def build_dreal(cells, mode, rng):
-    """mode: 'asli' | 'norm' (WD/rentang) | 'bersama' (soal semua sel)."""
+    """mode: 'raw' | 'norm' (WD/range) | 'shared' (questions all cells)."""
     m = len(cells)
     D = np.full((m, m), np.nan)
-    if mode == "bersama":
+    if mode == "shared":
         common = set.intersection(*[QSET[c] for c in cells])
         qs_for = lambda a, b: sorted(common)
     else:
@@ -69,7 +69,7 @@ def build_dreal(cells, mode, rng):
                 if len(oa) != len(ob):
                     continue
                 w = wasserstein_distance(oa, oa, u_weights=pa, v_weights=pb)
-                if mode in ("norm", "bersama"):
+                if mode in ("norm", "shared"):
                     rng_scale = oa.max() - oa.min()
                     if rng_scale > 0:
                         w = w / rng_scale
@@ -101,12 +101,12 @@ rows = []
 for ty in sorted(set(types)):
     gidx = np.where(types == ty)[0]
     cells = [keys[i] for i in gidx]
-    for mode in ["asli", "norm", "bersama"]:
+    for mode in ["raw", "norm", "shared"]:
         D = build_dreal(cells, mode, rng)
         sub_i = clean_idx(D, len(cells))
         if len(sub_i) < 6:
-            rows.append(dict(tipe=ty, varian=mode, n_sel=len(sub_i),
-                             n_soal_bersama=np.nan, rho_star=np.nan, rho_best=np.nan))
+            rows.append(dict(type=ty, variant=mode, n_cells=len(sub_i),
+                             n_shared_questions=np.nan, rho_star=np.nan, rho_best=np.nan))
             continue
         gsel = gidx[sub_i]
         iu = np.triu_indices(len(sub_i), 1)
@@ -119,14 +119,14 @@ for ty in sorted(set(types)):
         Dh = 1.0 - sims[:, iu[0], iu[1]]
         rhos = np.array([spearmanr(dd, y).statistic for dd in Dh])
         n_common = (len(set.intersection(*[QSET[c] for c in cells]))
-                    if mode == "bersama" else np.nan)
-        rows.append(dict(tipe=ty, varian=mode, n_sel=len(sub_i),
-                         n_soal_bersama=n_common,
+                    if mode == "shared" else np.nan)
+        rows.append(dict(type=ty, variant=mode, n_cells=len(sub_i),
+                         n_shared_questions=n_common,
                          rho_star=float(r_star), rho_best=float(np.nanmax(rhos))))
-        print(f"[{ty}|{mode}] n_sel={len(sub_i)} "
-              f"{'q_bersama=%d ' % n_common if mode=='bersama' else ''}"
+        print(f"[{ty}|{mode}] n_cells={len(sub_i)} "
+              f"{'q_shared=%d ' % n_common if mode=='shared' else ''}"
               f"H16 {r_star:+.3f} | best {np.nanmax(rhos):+.3f}")
 
 res = pd.DataFrame(rows)
 res.to_csv(f"{OUT}/dreal_sensitivity.csv", index=False)
-print("\ndisimpan -> dreal_sensitivity.csv")
+print("\nsaved -> dreal_sensitivity.csv")

@@ -1,11 +1,12 @@
-"""Uji lokasi-TETAP di level layer: L11 (dari Babak 2) & L1 (dari finding 09).
+"""FIXED-location test at layer level: L11 (from Round 2) & L1 (finding 09).
 
-Kenapa perlu: sweep memilih layer juara per tipe -> kena winner's curse.
-Dua lokasi ini ditetapkan SEBELUM melihat data 3 tipe baru, jadi mengujinya
-di keenam tipe bebas dari seleksi per-tipe (analog cek4 di finding 06).
+Why it is needed: the sweep picks a winning layer per type -> winner's curse.
+These two locations were fixed BEFORE looking at the data of the 3 new types,
+so testing them on all six types is free of per-type selection (analogous to
+check4 in finding 06).
 
-Sekalian hitung langit-langit output per tipe (geseran kalau SELURUH
-identitas di prompt diganti) supaya "% langit-langit" bisa dibaca.
+While we are at it, compute the output ceiling per type (the shift when the
+WHOLE identity in the prompt is swapped) so "% of ceiling" can be read.
 
 Output: notebooks/output/14_.../fixed_layer_L11_L1.csv
 """
@@ -24,7 +25,7 @@ N_PERM, SEED = 2000, 7
 
 d = pd.concat([pd.read_csv(f"{NB07}/sweep_rows.csv"),
                pd.read_csv(f"{OUT}/sweep6_rows.csv")])
-d["diff"] = d.shift_ke_realB - d.shift_ctrl_ke_realB
+d["diff"] = d.shift_to_realB - d.shift_ctrl_to_realB
 d["item"] = d.pair + " || " + d.qkey
 
 rows = []
@@ -34,7 +35,7 @@ for ty, g in d.groupby("attr_type"):
     n = len(M)
     t = M.mean(0) / (M.std(0, ddof=1) / np.sqrt(n))
     gg = g.drop_duplicates("item")
-    ceil = (gg.wd_A_to_realB - gg.wd_B_to_realB).mean()   # ganti seluruh identitas
+    ceil = (gg.wd_A_to_realB - gg.wd_B_to_realB).mean()   # swap whole identity
 
     rng = np.random.default_rng(SEED)
 
@@ -50,7 +51,7 @@ for ty, g in d.groupby("attr_type"):
 
     cols = list(piv.columns)
     i11, i1 = cols.index(11), cols.index(1)
-    rows.append(dict(tipe=ty, n=n, langit=ceil,
+    rows.append(dict(type=ty, n=n, ceiling=ceil,
                      t_L11=t[i11], p_L11=pval(i11), shift_L11=M[:, i11].mean(),
                      t_L1=t[i1], p_L1=pval(i1), shift_L1=M[:, i1].mean(),
                      t_max=t.max(), layer_max=cols[int(np.argmax(t))]))

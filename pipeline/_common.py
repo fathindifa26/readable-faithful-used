@@ -8,13 +8,19 @@ Convention:
   - Small, final CSV/JSON/PNG outputs (the ones this repo ships) live in
     `results/<stage>/`. Scripts read their cross-stage inputs from there
     and write their own outputs back into their own stage's folder.
+  - A few small arrays ARE shipped, because they unlock most of the
+    analysis without a GPU: the survey ground-truth distance matrix
+    (`results/04_fidelity_map/group_real_dist.npy`, the RSA target every
+    fidelity script scores against) and the per-type probe predictions
+    (`results/08_probe_causal_dissociation/probe_v2_pred_*.npz`).
   - Large intermediate arrays (`*.npz` / `*.npy` -- raw per-head
-    activations, on the order of hundreds of MB to a few GB per stage)
-    are produced by the Kaggle notebooks in `pipeline/<stage>/` but are
-    NOT included in this repo. To re-run a script that needs them,
-    re-run the notebook yourself and drop its `.npz`/`.npy` output into
-    `results/<stage>/` next to the shipped CSVs -- the scripts look for
-    them there by default.
+    activations, 11MB to ~500MB each, several GB in total) are produced
+    by the Kaggle notebooks in `pipeline/<stage>/` but are NOT included.
+    A script needing one will fail with a FileNotFoundError naming the
+    exact path it wanted; to satisfy it, re-run that stage's notebook and
+    drop its `.npz`/`.npy` output into `results/<stage>/` next to the
+    shipped CSVs. Scripts that need only the shipped arrays and CSVs run
+    as-is.
   - The demographic ground-truth table (`opinionqa_intersectional.csv`)
     is derived from restricted Pew ATP microdata and is likewise not
     shipped; see `data/README.md` to regenerate it into `data/`.

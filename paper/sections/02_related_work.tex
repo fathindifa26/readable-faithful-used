@@ -33,13 +33,20 @@ against that group's own distribution. Whether the \emph{inter-group
 geometry} at any location mirrors real inter-group opinion structure---the
 property every neighbor-borrowing and generalization application depends
 on---is never computed.\footnote{Verified against the authors' released
-repository as of 2026-08-13; to be re-checked against the camera-ready
-before submission.} Our work is the second-order complement: probe accuracy
+repository (\texttt{schang-lab/llm-opinions}) and the camera-ready
+description (ICLR 2026, OpenReview \texttt{kHVzEjThKE}): all four
+reported methods---linear probing, SAE feature analysis, SAE-based
+steering, and fine-tuning---are first-order, per-group comparisons; no
+inter-group RSA or distance-matrix analysis is described.} Our work is
+the second-order complement: probe accuracy
 is a phone book (accurate per entry); we ask whether the entries are
 \emph{arranged as a map}.
-% PRE-SUBMIT (sudah di checklist paper/README.md): verifikasi versi
-% camera-ready llm-opinions masih tanpa analisis geometri/RSA sebelum
-% submit -- klaim "never computed" di paragraf ini bergantung padanya.
+% Verifikasi camera-ready 2026-08-19: dicek via repo GitHub resmi +
+% ringkasan hasil paper (bukan baca PDF OpenReview kata-per-kata, halaman
+% verifikasi bot memblokir akses langsung) -- 3 sumber independen konsisten
+% bilang metodenya first-order semua, tak ada RSA/distance-matrix. Kalau
+% mau 100% pasti: buka https://openreview.net/pdf?id=kHVzEjThKE manual,
+% Ctrl+F "RSA"/"dissimilarity"/"distance matrix"/"inter-group".
 
 \paragraph{Localizing social attributes (the interpretability side).}
 \citet{kimevans2025} localize political ideology to attention heads and

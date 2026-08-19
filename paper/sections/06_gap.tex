@@ -104,7 +104,12 @@ Three findings from this table, in order of importance:
         heads at layer 11 shifts predictions toward the target group's
         true distribution: $59\%$ of trials move in the correct direction
         (vs.\ $32\%$ under a random-head control), recovering $41\%$ of
-        the achievable ceiling. Because the 240 items cluster into 12
+        the achievable ceiling.\footnote{The random-head control's own
+        $32\%$ is below a symmetric $50\%$ baseline because many items
+        show exactly zero measurable shift under this control (median
+        shift $=0$), which count against ``correct'' rather than as a
+        coin flip; we therefore compare against this empirical control
+        rather than an assumed $50\%$.} Because the 240 items cluster into 12
         pairs, the primary test is an exact pair-level sign-flip:
         $p_{\text{pair}}=0.019$ (adding layer 18: $0.016$)---evidence,
         but marginal, and it does not survive a Holm correction over the
@@ -305,14 +310,15 @@ the pattern of the two extreme types, which we test \emph{directly}
 rather than by comparing significance verdicts \citep{gelman2006}:
 
 \begin{itemize}
-  \item \textbf{The top-fidelity types show no detectable causal locus,
-        under every estimator of ``top''.} Which type is most faithful
+  \item \textbf{The top-fidelity types show no detectable
+        \emph{single-layer} causal locus, under every estimator of
+        ``top''.} Which type is most faithful
         depends on the ruler: EDUCATION$\times$INCOME under split-half
         and held-out template, AGE$\times$POLPARTY and
         RELIG$\times$POLPARTY under the lexical-partial control, where
         EDUCATION$\times$INCOME drops to fifth
-        (Sec.~\ref{sec:lexical}). The conclusion is the same under all
-        three. EDUCATION$\times$INCOME---with the largest output ceiling
+        (Sec.~\ref{sec:lexical}). The conclusion holds under all three.
+        EDUCATION$\times$INCOME---with the largest output ceiling
         ($0.0194$) and the largest raw shift of any type at any layer
         ($+0.0118$ at L9)---has no layer approaching significance under
         cluster-robust correction ($p=0.82$), because the shift is
@@ -333,15 +339,55 @@ rather than by comparing significance verdicts \citep{gelman2006}:
         ($0.30$ split-half, $0.41$ held-out template), is the single
         result that survives everything we throw at it: $t=3.22$ at L11,
         exact pair-level $p=0.0020$, surviving Bonferroni, recovering
-        $42\%$ of its ceiling---at the faithful depth, in a type whose
-        map there is poor.
+        $42\%$ of its ceiling---at the depth fixed in advance by the map,
+        in a type whose map there is poor.
 \end{itemize}
+
+\paragraph{The map weakens in the answering context---but the
+dissociation does not depend on that.} Sec.~\ref{sec:act2}'s fidelity
+is scored on an identity-only prompt (no opinion question, last token),
+whereas the causal and probe experiments are scored in a full QA
+context at the opinion-answer position. A tempting alternative reading
+of the dissociation is therefore not ``the model does not consult its
+map'' but ``the faithful geometry is not the one that exists once a
+question is present.'' We test this on the activations already
+collected for the probe (Sec.~\ref{sec:probe}), holding question
+composition fixed across cells---each cell is averaged over the same
+question set, the questions answered by every cell of its type, since
+coverage is only ${\ge}60\%$ per cell and unmatched subsets would
+themselves contribute inter-cell distance. The resulting RDM is
+near-perfectly reliable (split-half $\rrho=0.98$--$0.99$, above the
+identity-only side's $0.72$--$0.94$), so what follows is a property of
+the representation, not of measurement noise.
+
+Two results, and the first goes against us. \textbf{The map does
+degrade}: in five of six types QA-context fidelity falls well below the
+identity-only value (EDUCATION$\times$INCOME $0.67\to0.10$;
+RACE$\times$POLPARTY $0.59\to0.17$; RELIG$\times$POLPARTY
+$0.60\to0.23$; RACE$\times$POLIDEOLOGY $0.47\to0.24$;
+AGE$\times$POLPARTY $0.67\to0.39$), the exception being
+RACE$\times$RELIG, which \emph{rises} ($0.33\to0.49$). We scope
+Sec.~\ref{sec:act2} accordingly: it characterises the geometry of an
+identity-only prompt, and only a weaker version of that geometry
+survives into the context where the model actually answers.
+\textbf{The dissociation, however, is unchanged}: re-running the
+correlation with this QA-context ruler at the a-priori locus L11 gives
+exactly what the identity-only ruler gives, $\rrho=+0.03$ ($p=0.96$).
+The type with the clearest causal locus (RACE$\times$POLIDEOLOGY) is
+mid-pack on the QA ruler too, and the most faithful type under it
+(RACE$\times$RELIG) has no detectable L11 effect ($p=0.27$). At each
+type's own \emph{selected} best layer the correlation is ruler-unstable
+($-0.77$ identity-only vs.\ $+0.71$ QA-context, both n.s.), which is
+the same caution we already attach to that quantity. Measured in the
+very context where the causal experiments look for it, fidelity still
+fails to predict causal use---so ``we measured the wrong map'' does not
+explain the dissociation away.
 
 Representational fidelity is therefore not what decides whether identity
 is causally used: the clearest causal pathway sits in a type that is
 near the bottom under every fidelity estimator, the top-fidelity types
-show nothing detectable under any of them, and the direct contrasts are
-at worst borderline. The graded pattern of
+show nothing detectable at a single layer under any of them, and the
+direct contrasts are at worst borderline. The graded pattern of
 Sec.~\ref{sec:v2} was real within those three types but does not
 generalise; we report it as the coincidence it turned out to be.
 
@@ -361,7 +407,8 @@ faithful map to answer, these panels would slope upward; they do not.}
 in this sweep the layer with the largest raw shift fails correction while
 a smaller, steadier layer passes: RELIG$\times$POLPARTY (L12/L11 largest,
 L8 passes), RACE$\times$RELIG (L7 $+0.0030$ and L10 $+0.0026$ fail, L1
-passes at $+0.0010$), and EDUCATION$\times$INCOME (largest shift in the
+passes at $+0.0010$, with the selection-inflation caveat given above for
+this type), and EDUCATION$\times$INCOME (largest shift in the
 paper, nothing passes at either clustering level). Reporting mean effect
 sizes without a selection-and-cluster-corrected variance test would have
 produced three wrong localisations here.
@@ -374,7 +421,7 @@ against zero instead of against the control changes no conclusion (e.g.,
 RACE$\times$POLIDEOLOGY@L11: $t=3.24$, $p=0.0022$ vs.\ zero; full table
 in the released analysis code).
 
-\paragraph{Caveats.} Four, stated plainly. (i) Absolute effects are small
+\paragraph{Caveats.} Five, stated plainly. (i) Absolute effects are small
 throughout ($0.001$--$0.012$), commensurate with output ceilings that are
 themselves small; the surviving effect is statistically robust, not
 practically large. (ii) Most loci were \emph{discovered} by the sweep
@@ -389,7 +436,17 @@ degenerate in our prompt design (the final token is shared across cells),
 so we cannot contrast layer 1 against pure embeddings; layers 1 and 2 are
 near-identical in geometry ($\rrho=0.90$) and both differ appreciably from
 layer 11 ($\rrho=0.78$). We record this as an open question rather than a
-claim (Sec.~\ref{sec:limitations}).
+claim (Sec.~\ref{sec:limitations}). (v) A single-layer patch may fail to
+detect a causally-used representation that is redundantly encoded
+across many layers---exactly what a high, broadly-distributed fidelity
+(Figure~\ref{fig:headmap}) would predict. Our one direct check argues
+against strong compensation, though only for one type: AGE$\times$POLPARTY's
+two-layer patch (L11+L18 jointly, Sec.~\ref{sec:v2}) moves the
+pair-level effect only marginally beyond the single-layer result
+($p=0.019\to0.016$). EDUCATION$\times$INCOME---the type this caveat
+matters most for---has not been tested under a multi-layer patch;
+redundant, single-layer-invisible use remains an alternative we have
+not ruled out for it.
 
 \subsection{How much is recoverable by direct read-out?}
 \label{sec:probe}
@@ -465,7 +522,7 @@ claim that internal states are more informative than generated answers
         only surviving causal trace sits at layer 1
         (Sec.~\ref{sec:sweep}, with the selection caveat given there).
         Together with the converse case (the most faithful mid-stack maps
-        carrying no detectable causal effect), this points to a double
+        carrying no detectable single-layer causal effect), this points to a double
         dissociation between what can be read out and what drives the
         answer.
 \end{itemize}
@@ -486,9 +543,11 @@ construction---this test uses a half-split design: fit on half the cells,
 predict every cell of the other half with the same model, evaluate within
 that half, ten repetitions with halves swapped.
 
-The result is a flat null for everything. The probe recovers a group
-ordering correlation of $+0.02$ to $+0.07$; the model's own answers
-recover $+0.06$ to $+0.11$---slightly \emph{more} than the probe in all
+The result is a flat null for everything. The full-layer L11 probe
+recovers a group ordering correlation of $+0.02$ to $+0.07$ across
+types; the single head \starhead{} is noisier still ($-0.05$ to
+$+0.07$, negative for RACE$\times$POLIDEOLOGY); the model's own answers
+recover $+0.06$ to $+0.11$---at least as much as either probe in all
 six types. The metric itself is not the limitation: simulating two
 independent survey samples of the same size from each cell gives a
 reliability ceiling of $+0.81$ to $+0.86$, so both read-outs sit at

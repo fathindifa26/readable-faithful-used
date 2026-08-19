@@ -90,11 +90,13 @@ This is the paper's core arc, and it reversed direction twice.
    the *least* faithful types on the Act 2 map — has the **strongest**
    causal locus of all six, at L11 (exact pair-level p=0.0005).
    EDUCATION×INCOME — the *most* faithful type — has **no detectable
-   causal locus anywhere**, despite having the largest raw ceiling and
-   output movement available to it. Spearman correlation between fidelity
+   single-layer causal locus anywhere**, despite having the largest raw
+   ceiling and output movement available to it. (Every patch here is
+   applied at one layer, so redundant encoding across layers stays an
+   alternative reading the paper states rather than rules out.) Spearman correlation between fidelity
    and causal strength across three independent fidelity rulers
-   (split-half, held-out-template, partial-lexical) is never significantly
-   positive (ranging −0.09 to −0.77 depending on ruler and layer) —
+   (split-half, held-out-template, partial-lexical — and later a fourth,
+   QA-context ruler, item 7) is never significantly positive —
    **fidelity does not predict causal use.**
 5. **A probe/mouth dissociation** (finding 10, `08_probe_causal_dissociation`):
    a linear probe on L11 reads the map correctly (beats the model's own
@@ -111,7 +113,25 @@ This is the paper's core arc, and it reversed direction twice.
    Instruction tuning changes *accuracy* (error roughly doubles, Wasserstein
    distance 0.37→0.66) and *direction* (becomes reliably correct in all six
    types, p<0.001) — not identity-dependence.
-7. **The backfire is carried by identity content, not generic corruption**
+7. **The map is measured on identity-only prompts, and it weakens where
+   the causal experiments actually look** (finding 15,
+   `08_probe_causal_dissociation/qa_context_fidelity.py`): Act 2's
+   fidelity is scored on a prompt containing an identity and no opinion
+   question; Act 3 intervenes in a full QA context at the answer
+   position. Re-scoring the same head on the activations already
+   collected for the probe — holding question composition constant
+   across cells, which matters a great deal here — the map is
+   substantially *weaker* in five of six types (EDUCATION×INCOME
+   0.67→0.10; RACE×POLPARTY 0.59→0.17), the exception being
+   RACE×RELIGION, which rises (0.33→0.49). This is not measurement
+   noise: the QA-context RDM is more reliable (split-half 0.98–0.99)
+   than the identity-only one (0.72–0.94). So Act 2's numbers describe
+   an identity-only prompt and are scoped as such. The dissociation
+   itself is unaffected — recomputing the fidelity-vs-causal correlation
+   on the QA-context ruler gives exactly what the identity-only ruler
+   gives (ρ=+0.03 at the a-priori locus) — so "the wrong map was
+   measured" does not explain result 4 away.
+8. **The backfire is carried by identity content, not generic corruption**
    (finding 14, `11_shuffled_donor_control`): the RACE×RELIGION backfire
    (t=−2.4, p=0.005, replicated independently here) could in principle be
    "overwriting 128 numbers mid-computation just breaks whatever is
@@ -148,10 +168,14 @@ type's output further from the truth in every diagnostic thrown at it.
 
 ## What this repo does *not* claim
 
+- The Act 2 fidelity numbers describe an *identity-only* prompt. In the
+  QA context where the model actually answers, the same head is
+  measurably less faithful (item 7 above); the paper scopes the claim
+  accordingly rather than presenting one number as both.
 - A GSS/WVS cross-institution replication was scoped and then dropped from
   this paper (see Limitations in `paper/`) — single-institution (Pew) US
   ground truth is an explicit limitation, not a checked box.
-- The paired-group specificity of the finding-14 backfire (item 7 above)
+- The paired-group specificity of the finding-14 backfire (item 8 above)
   is reported as suggestive, not settled — 12 donor-recipient pairs is a
   real power ceiling for that particular question.
 
@@ -167,6 +191,7 @@ type's output further from the truth in every diagnostic thrown at it.
 | 12 (cross-model robustness) | `09_robustness_cross_model` | `map_summary.csv`, `mouth_summary.csv` |
 | 13 (instruct ceiling) | `10_ceiling_instruct_check` | `ceiling_summary.csv` |
 | 14 (donor control) | `11_shuffled_donor_control` | `shuffled_donor_summary.csv`, `shuffled_donor_contrasts.csv` |
+| 15 (QA-context fidelity) | `08_probe_causal_dissociation` | `qa_context_fidelity.csv` |
 
 For exact numbers, run the corresponding `analyze` script in
 `pipeline/<stage>/` against the CSVs in `results/<stage>/` — see the

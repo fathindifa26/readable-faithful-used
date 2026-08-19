@@ -18,14 +18,15 @@ intervene causally at every layer across six demographic attribute-pair
 types. Four headline results:
 
 1. **A single attention head reads out group identity faithfully**
-   (selection-corrected fidelity up to ρ=0.63) — better than the standard
-   last-token residual read-out, and better than a lexical-similarity
-   baseline can explain. It replicates at a family-specific address in an
-   independent model family.
+   (selection-corrected fidelity up to ρ=0.63, measured on identity-only
+   prompts) — better than the standard last-token residual read-out, and
+   better than a lexical-similarity baseline can explain. It replicates at
+   a family-specific address in an independent model family. In the QA
+   context where the model answers, the same map is measurably weaker.
 2. **Causal use does not follow fidelity.** The strongest causal pathway
    into the model's output sits in one of the *least* faithful types
-   (exact p=0.002); the *most* faithful type has no detectable causal
-   locus at all.
+   (exact p=0.002); the *most* faithful type has no detectable
+   single-layer causal locus.
 3. Where a causal pathway exists for a low-fidelity type, it can move the
    output *away* from the truth — and a donor-control experiment shows
    this is carried by identity content, not generic activation corruption.
@@ -61,18 +62,20 @@ reproduction convention every script follows.
 ```bash
 pip install -r requirements.txt
 
-# Check a result that doesn't need a GPU or the raw survey data:
-python pipeline/11_shuffled_donor_control/shuffled_donor.py
-
-# Rebuild the causal-fidelity dissociation tables (needs data/, see data/README.md):
+# The paper's central causal statistic, from shipped data only:
 python pipeline/08_probe_causal_dissociation/causal_cluster_robust.py
+
+# The donor control behind result 3:
+python pipeline/11_shuffled_donor_control/shuffled_donor.py
 ```
 
-Re-running a `*_kaggle.ipynb` notebook (GPU, Mistral-7B) regenerates the
-raw activations under `results/<stage>/`; the paired `analyze*.py` script
-in the same stage folder then reproduces the paper's statistics from them.
-Cross-checking the paper's numbers doesn't require the GPU step — all the
-final CSVs already ship in `results/`.
+Five scripts run against nothing but what this repo ships, and they cover
+the main causal claims — [`pipeline/README.md`](pipeline/README.md) lists
+them, plus exactly what each remaining script needs (either the survey
+table you rebuild via [`data/README.md`](data/README.md), or a large
+activation dump you regenerate by re-running that stage's GPU notebook).
+Cross-checking the numbers in the paper needs no GPU: the final CSVs all
+ship in `results/`.
 
 ## License
 

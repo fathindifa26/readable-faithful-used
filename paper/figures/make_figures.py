@@ -178,7 +178,7 @@ def fig_causal_sweep():
                     textcoords="offset points", ha="center", fontsize=7,
                     color=INK if sig else INK_MUTED,
                     bbox=dict(fc="white", ec="none", pad=0.6))
-        ax.set_title(pretty(ty) + "   $p$=%.3f" % pcor[ty], pad=3)
+        ax.set_title(pretty(ty) + "   $p_{\\mathrm{item}}$=%.4f" % pcor[ty], pad=3)
         ax.set_xticks([0, 8, 16, 24, 31])
         ax.grid(axis="y", color=GRID, lw=0.5, alpha=0.7)
         ax.set_axisbelow(True)

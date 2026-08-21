@@ -3,8 +3,9 @@
 Code and data pipeline for **"Readable, Faithful, Used: Three Dissociable
 Properties of Demographic Identity in a Language Model."**
 
-Paper PDF: [`paper/main.pdf`](paper/main.pdf) (arXiv link to be added on
-submission). Author: Fathin Difa Robbani, independent researcher
+Paper: [arXiv:2608.18768](https://arxiv.org/abs/2608.18768v1)
+(PDF also in this repo: [`paper/main.pdf`](paper/main.pdf)).
+Author: Fathin Difa Robbani, independent researcher
 ([ORCID 0009-0000-6184-8919](https://orcid.org/0009-0000-6184-8919)).
 
 ## What this paper finds
@@ -85,10 +86,12 @@ Code: MIT (`LICENSE`). Paper text and figures: CC BY 4.0.
 
 ```bibtex
 @misc{robbani2026readable,
-  title  = {Readable, Faithful, Used: Three Dissociable Properties of
-            Demographic Identity in a Language Model},
-  author = {Robbani, Fathin Difa},
-  year   = {2026},
-  note   = {Preprint}
+  title         = {Readable, Faithful, Used: Three Dissociable Properties
+                   of Demographic Identity in a Language Model},
+  author        = {Robbani, Fathin Difa},
+  year          = {2026},
+  eprint        = {2608.18768},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CL}
 }
 ```

@@ -11,14 +11,10 @@ documented the behavioral symptom from outside
 (\citealp{sim2real2026,odyssim2026}). We establish property (ii),
 \emph{faithfully arranged}---at specific locations, unevenly across
 attribute types---and then show that property (iii), \emph{causally
-used}, is not a function of it. (We reserve the word ``layer'' for
-transformer layers throughout.) Under cluster-robust inference, causal
+used}, is not a function of it. Under cluster-robust inference, causal
 use is not absent---one type shows a clear, Bonferroni-surviving pathway
-at L11, and two more are suggestive---but it does not follow the map: the
-most faithful type shows no correction-surviving single-layer locus anywhere, the clearest
-locus belongs to one of the \emph{least} faithful types, and the direct
-contrast between those two is itself at least borderline (bootstrap CI
-excluding zero; permutation $p=0.065$). The failure of natural-prompt
+at L11, and two more are suggestive---but it does not follow the map
+(Sec.~\ref{sec:sweep}). The failure of natural-prompt
 simulation is therefore not simply ``the map is weak where simulation
 fails''; it is that a good map is no guarantee that the model consults
 it.
@@ -31,21 +27,15 @@ consistent with it: outputs vary little across personas overall
 (Sec.~\ref{sec:ceiling}), and forcing identity through the network moves them only
 slightly even under a deliberately strong instrument. What our results do
 \emph{not} support is the tempting explanation that simulation fails
-because the internal representation is poor---the type with the best
-internal map shows no correction-surviving single-layer causal effect, while a
-weakly-represented
-type shows the strongest. This suggests behavioral
+because the internal representation is poor. This suggests behavioral
 homogeneity is not one mechanism but at least two: insufficient causal
 throughput where the map is good, and simply no good map to throughput
-where it is not. One qualification is essential to this bridge: the
-behavioral literature evaluates post-trained assistants, whereas we
+where it is not. One qualification: the behavioral literature evaluates post-trained assistants, whereas we
 measure a base model. Post-training is itself a plausible cause of
 output homogenization, so our results should be read as establishing
 that homogeneity has a representational component \emph{already present
 before} post-training---not as an explanation of any particular
-assistant's behavior. Which of the two contributions dominates in a
-post-trained model is an open empirical question our design cannot
-settle.
+assistant's behavior.
 
 \paragraph{Why surface fine-tuning may not transfer.}
 SubPOP-style fine-tuning \citep{subpop2025} improves in-distribution
@@ -59,23 +49,15 @@ location transfer where surface fine-tuning does not?) is future work.
 \paragraph{Practical guidance now.}
 (1) For population simulation, per-group readability is not enough;
 check second-order fidelity before any application that relates groups.
-(2) Demographic attributes are not interchangeable: political and
-socio-economic structure is deeply encoded; race$\times$religion structure
-is weak and prompt-fragile everywhere we looked. (3) Natural-prompt
+(2) Demographic attributes are not interchangeable (Sec.~\ref{sec:act2}). (3) Natural-prompt
 personas capture a small fraction of real inter-group differences in a
 base model---silicon sampling pipelines should measure, not assume,
 identity conditioning. (4) \textbf{Do not steer through a single apparently-faithful unit
 without a corruption control}: the most consistent effect in our causal
-analysis is a \emph{harmful} one from doing exactly this
+analysis is a \emph{harmful} one from doing this
 (RACE$\times$RELIG, \starhead{} alone, wrong direction,
-$p_{\text{pair}}=1/4096$). A donor-control experiment
-(Sec.~\ref{sec:v2}) shows this is not generic corruption---a
-structure-destroyed donor perturbs the output harder and drifts
-nowhere---so the misdirection is carried by identity content, though its
-specificity to the \emph{paired} group remains suggestive rather than
-certified. The practical warning is unchanged and now better grounded:
-fidelity of a location does not license single-unit intervention at
-it.
+$p_{\text{pair}}=1/4096$; Sec.~\ref{sec:v2}, including the donor
+controls that rule out generic corruption).
 (5) If a per-group distribution is what you need, read it rather than
 ask for it: a linear probe on \starhead{} alone lands $21$--$31\%$ closer
 to survey truth than the model's own answers (Sec.~\ref{sec:probe}). But

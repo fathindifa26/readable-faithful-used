@@ -8,8 +8,8 @@
 
 % --- Paragraf 1: hook — simulasi survei LLM itu dipakai orang, tapi outputnya homogen
 LLMs are increasingly deployed as simulated survey respondents and human
-simulators \citep{subpop2025,odyssim2026}. Yet a growing body of
-behavioral evidence shows their outputs are excessively uniform: simulated
+simulators \citep{subpop2025,odyssim2026}. Yet behavioral evidence shows
+their outputs are excessively uniform: simulated
 users are ``overly agreeable'' and ``stylistically uniform''
 \citep{sim2real2026}, opinion predictions barely differentiate demographic
 groups, and general model capability does not predict simulation fidelity
@@ -25,11 +25,9 @@ kimevans2025}---but validates against the model's own behavior (probe
 accuracy, steering success), never against external population ground
 truth. LLM-survey-simulation work has exactly that ground truth (real
 per-group response distributions) but treats the model as a black box.
-One community runs the brain scan but never administers the
-questionnaire; the other administers the questionnaire but never looks
-inside the head. The experiment that requires both instruments at
-once---does the internal arrangement of groups match how those groups
-actually answer?---sits in the gap between them, and had not been run.
+The experiment that requires both instruments at once---does the internal
+arrangement of groups match how those groups actually answer?---sits in
+the gap between them, and had not been run.
 
 % --- Paragraf 3: pertanyaan riset + instrumen
 We hold both instruments at once. For 169 intersectional demographic
@@ -50,8 +48,8 @@ layers):
   \item \textbf{Readable} (established by prior work): per-group opinion
         distributions can be decoded from internal activations
         \citep{llmopinions2026}.
-  \item \textbf{Faithfully arranged} (this work): at specific locations
-        ---most strikingly a single attention head, \starhead---the
+  \item \textbf{Faithfully arranged} (this work): at specific locations,
+        including a single attention head, \starhead---the
         \emph{inter-group geometry} mirrors real opinion structure
         (selection-corrected $\rrho$ up to $0.63$), something per-group
         readability neither implies nor requires.
@@ -67,17 +65,18 @@ layers):
 % --- Paragraf 5: kontribusi eksplisit
 \paragraph{Contributions.}
 \begin{itemize}
-  \item The first \emph{fidelity map} of demographic identity in an LLM:
-        RDM-vs-RDM comparison against real survey ground truth across
+  \item A \emph{fidelity map} of demographic identity in an LLM---to our
+        knowledge the first to score internal inter-group geometry
+        against real survey ground truth: RDM-vs-RDM comparison across
         layers, attention heads, FFN outputs, and prompt variants, with
         winner's-curse-corrected statistics (max-statistic permutation,
         held-out-template and split-half validation).
   \item Identification of \starhead{} as a general demographic-geometry
         head, significant across all six attribute types as a
-        \emph{fixed} location; and the finding that fidelity is sharply
-        heterogeneous---political/socio-economic structure is deeply
-        encoded, racial$\times$religious structure is weak and
-        prompt-fragile at every location tested.
+        \emph{fixed} location; and the finding that fidelity is
+        heterogeneous by type---political/socio-economic structure is
+        encoded at $\rrho$ up to $0.63$, racial$\times$religious
+        structure is weak and prompt-fragile at every location tested.
   \item Quantification of the knowledge--behavior gap: replacing the
         entire prompt identity moves the model's predicted distribution
         by under $2\%$ of its prediction error in aggregate (a single
@@ -89,11 +88,12 @@ layers):
         a low-fidelity type, and the most faithful type shows no
         correction-surviving single-layer pathway.
   \item A direct measurement of what a faithful read-out buys: a probe on
-        \starhead{} alone (128 dimensions) is $22$--$30\%$ closer to
+        \starhead{} alone (128 dimensions) is $21$--$31\%$ closer to
         survey truth than the model's own answers, but recovers almost no
-        per-question group ordering---so first-order readability,
-        second-order fidelity, and item-level group discrimination come
-        apart from one another.
+        per-question group ordering. The two measure different
+        resolutions: the group map is faithful \emph{on average} and is
+        not sharp enough to say who answers what on any particular
+        question (Sec.~\ref{sec:probe}).
   \item A reframing with practical consequences. If faithful structure
         already exists internally, surface fine-tuning \citep{subpop2025}
         may re-teach what the model already encodes---a candidate

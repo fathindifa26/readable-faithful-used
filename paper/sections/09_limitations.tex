@@ -10,8 +10,7 @@
         with them the map--use dissociation---have only been run on
         Mistral-7B. The output-side near-invariance does replicate on an
         instruction-tuned Mistral under its chat template
-        (Sec.~\ref{sec:ceiling}), so it is not a base-model artifact,
-        but it remains a claim about the letter-probability interface.
+        (Sec.~\ref{sec:ceiling}), so it is not a base-model artifact.
   \item \textbf{Letter-probability read-out.} Output distributions are
         read from option-letter logits after \texttt{Answer:}---the
         standard silicon-sampling interface, but known to diverge from
@@ -30,22 +29,28 @@
   \item \textbf{Correlational map, partial causal probe.} RSA fidelity is
         correlational; the patching program (Sec.~\ref{sec:v2},
         Sec.~\ref{sec:sweep}) addresses use, not the origin of the map.
-        Our dissociation claim rests on six attribute types---enough for
-        two unambiguous counterexamples, not enough to estimate the
-        fidelity--causality relationship with precision. The two sides
-        are also measured in different input contexts (identity-only
-        vs.\ QA), and the map is measurably weaker in the QA context
-        (Sec.~\ref{sec:sweep}); the fidelity--causality correlation is
-        unchanged when re-computed on the QA-context ruler, but our
-        headline fidelity numbers describe an identity-only prompt and
-        should be read as such. And because every patch is
+  \item \textbf{Six types, not a sweep.} The dissociation claim rests on
+        six attribute types---a purposive sample of the 66 possible pairs
+        among our twelve attributes (Sec.~\ref{sec:setup},
+        Appendix~\ref{app:data}). That is enough for two unambiguous
+        counterexamples, but not enough to generalize to intersections
+        outside this set.
+  \item \textbf{Fidelity and causality are measured in different
+        contexts.} The two sides use different input contexts
+        (identity-only vs.\ QA), and the map is measurably weaker in the
+        QA context (Sec.~\ref{sec:sweep}); the fidelity--causality
+        correlation is unchanged when re-computed on the QA-context
+        ruler, but our headline fidelity numbers describe an
+        identity-only prompt and should be read as such.
+  \item \textbf{Single-layer patches only.} Because every patch is
         single-layer, redundant encoding across layers remains an
         alternative explanation for a null result that we have only
         partially ruled out (Sec.~\ref{sec:sweep}, caveat v).
   \item \textbf{\starhead{} discovery provenance.} The head was first
         noticed in per-type top-10 lists before being fixed for the
-        all-type test; strongest confirmation requires a second model /
-        preregistered replication.
+        all-type test. Sec.~\ref{sec:crossmodel} supplies the
+        second-model check (L33\,H9, selection-free on five types); a
+        preregistered replication is still outstanding.
   \item \textbf{Sparse cells.} Some intersectional cells have thin survey
         samples; NaN pairs were excluded (Appendix~\ref{app:data}).
   \item \textbf{Twelve pairs per type bound the causal power.} With
@@ -77,7 +82,7 @@ than 2\% of their error when the entire demographic identity is replaced,
 and the small movement that exists is not reliably toward the target
 group's truth. The failure is also unequal. Race-based attributes are the
 weakest and the most prompt-fragile everywhere we measured, so simulated
-outputs for racial groups are the least trustworthy exactly where
+outputs for racial groups are the least trustworthy where
 misuse would be most harmful. We therefore caution explicitly against
 policy-adjacent uses of simulated group opinions.
 

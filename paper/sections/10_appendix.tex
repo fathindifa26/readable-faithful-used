@@ -16,7 +16,8 @@ scale; the option list is truncated to the ordinal length, dropping the
 trailing \textit{Refused} category.
 
 A \emph{cell} is one intersection of two attribute values within one
-attribute type. The six types contribute $169$ cells in total:
+attribute type. The six types contribute $169$ cells in total
+(Table~\ref{tab:cellinventory}):
 
 \begin{table}[h]
 \centering
@@ -32,6 +33,43 @@ RELIG$\times$POLPARTY    & 30 & 435 \\
 RACE$\times$POLPARTY     & 28 & 378 \\
 \bottomrule
 \end{tabular}
+\caption{Cell and same-type pair counts per attribute type. \emph{Pairs}
+= $\binom{\text{cells}}{2}$, the number of RSA observations available for
+that type.}
+\label{tab:cellinventory}
+\end{table}
+
+\paragraph{Why these six pairs (Sec.~\ref{sec:setup}).} The twelve
+demographic attributes in this corpus admit $\binom{12}{2}=66$ possible
+attribute pairs. Applying the same per-wave $n\geq30$ rule used above to
+all 66---counting, for each pair, the number of distinct attribute-value
+combinations that ever clear the threshold in any of the 15 waves---ranks
+our six pairs 7th to 44th of 66 by cell count
+(Table~\ref{tab:pair-rank}). The richest pair by this measure
+(INCOME$\times$RELIG, 39 cells) and the poorest (CITIZEN$\times$SEX, 5
+cells) were never tested. Selection was therefore not biased toward the
+best-populated pairs; the full ranking script and output accompany the
+repository.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+Attribute type (used) & Cells & Rank of 66 (tied block) \\
+\midrule
+EDUCATION$\times$INCOME  & 33 & 7th (7--8) \\
+RACE$\times$POLIDEOLOGY  & 30 & 18th (18--22) \\
+RELIG$\times$POLPARTY    & 30 & 18th (18--22) \\
+RACE$\times$RELIG        & 30 & 18th (18--22) \\
+RACE$\times$POLPARTY     & 28 & 23rd (23--24) \\
+AGE$\times$POLPARTY      & 18 & 44th (44--46) \\
+\bottomrule
+\end{tabular}
+\caption{Rank of each used pair among the 66 possible attribute pairs by
+number of cells clearing $n\geq30$. Ranks are the best rank within each
+tied block (competition ranking); the parenthesised range gives the
+positions that block occupies.}
+\label{tab:pair-rank}
 \end{table}
 
 The survey-side distance $D^{\mathrm{real}}_{ij}$ averages the
@@ -84,10 +122,7 @@ party affiliation is Democrat.}
 \subsection{Full fidelity map}
 \label{app:map}
 % peta_kesetiaan_full.csv -> figures/ (dibangun paper/figures/make_figures.py)
-Figure~\ref{fig:headmap} gives the complete $32\times32$ head map per
-type and Figure~\ref{fig:layercurve} the per-layer residual-stream and
-FFN curves beside the best-head-per-layer curve, both at \textsc{Tmean}.
-The underlying table (\texttt{peta\_kesetiaan\_full.csv}) holds
+The table behind Figures~\ref{fig:headmap} and~\ref{fig:layercurve} (\texttt{peta\_kesetiaan\_full.csv}) holds
 $32{,}670$ rows: $1{,}089$ locations $\times$ 5 template conditions
 $\times$ 6 types. The layer-0 residual read-out is \texttt{NaN} by
 construction---the final token is shared across cells, so that
@@ -167,11 +202,8 @@ Wasserstein distance, giving $n=240$ per type--condition cell.
 \textbf{Sweep (Sec.~\ref{sec:sweep}).} The v2 all-32-heads intervention is
 repeated at every layer, for all six attribute types (three in the first
 sweep, three added later with identical settings: 12 pairs $\times$ 20
-maximum-disagreement questions, $n=240$ items). All 33 conditions (32
-layers + a random-layer control) are packed as one batch of identical
-prompts per pair--question item, so a single forward pass yields the whole
-sweep and all conditions see identical inputs. The selection correction is
-a sign-flip permutation test (2{,}000 permutations) in which the same
+maximum-disagreement questions, $n=240$ items). The selection correction
+is a sign-flip permutation test (2{,}000 permutations) in which the same
 random sign is applied to an item across all layers, preserving the
 between-layer correlation structure; the statistic is the maximum $t$ over
 the 32 layers. All six types were corrected in one run with one seed;
@@ -231,15 +263,11 @@ from the same forward pass. The group-blind baseline predicts, for each
 held-out row, the mean real distribution of the \emph{other} cells on that
 question (training cells only).
 
-\textbf{Group-ordering test.} Per question we rank cells by the mean
-opinion each read-out predicts and correlate that ranking with the true
-one (Spearman), averaging over questions. Leave-one-out predictions cannot
-be used here: a leave-one-out prediction is anti-correlated with the
-held-out value by construction, which drives the group-blind baseline to
-$\rrho\approx-0.99$---an artifact, not a signal. We therefore fit on half
-the cells and evaluate on the other half with a single model (10
-repetitions, halves swapped), so that all predictions within an evaluated
-question come from the same fit.
+\textbf{Group-ordering test.} Correlations are Spearman. The
+leave-one-out artifact the half-split design of Sec.~\ref{sec:probe}
+avoids is severe: leave-one-out predictions are anti-correlated with the
+held-out value by construction, driving the group-blind baseline to
+$\rrho\approx-0.99$.
 
 \textbf{Reliability ceiling.} To calibrate the group-ordering numbers we
 simulate two independent survey samples per cell (multinomial draws at
@@ -283,20 +311,14 @@ a type is possible for three types (77--102 common questions): fidelity
 holds for AGE ($0.68\to0.64$) and RELIG$\times$POLPARTY ($0.61\to0.56$;
 best head $0.72$), and drops for EDUCATION$\times$INCOME
 ($0.66\to0.44$). For the three race-containing types no question is
-answered by all cells, so this variant is undefined there---a data
-limitation we note rather than hide.
+answered by all cells, so this variant is undefined there.
 
 \subsection{Cluster-robust causal inference}
 \label{app:cluster}
 % analisis_lokal/causal_cluster_robust.py -> causal_pairlevel_*.csv
-Each type's 240 patching items are 12 pairs $\times$ 20 questions. For
-every test we first average within pair (12 values), then enumerate all
-$2^{12}=4{,}096$ sign-flip combinations exactly; max-statistic variants
-take the maximum $t$ over the 32 layers within each flip. Testing against
-zero (i.e., against the unpatched baseline prediction) instead of against
-the random-layer control changes no conclusion. Item-level statistics are
-reported only as descriptive detail; they overstate significance because
-items within a pair are strongly dependent.
+For every test we first average within pair (12 values), then enumerate
+all $2^{12}=4{,}096$ sign-flip combinations exactly; max-statistic
+variants take the maximum $t$ over the 32 layers within each flip.
 
 \subsection{Random-projection control for the head--residual comparison}
 \label{app:randproj}
@@ -307,7 +329,7 @@ per layer, fixed across folds) are put through one identical
 held-out-template selection pipeline. Held-out fidelity per type
 (head / residual / projection): AGE $0.52/0.39/0.42$; EDU
 $0.54/0.51/0.49$; RELIG$\times$PP $0.44/0.17/0.18$; RACE$\times$PP
-$0.48/0.28/0.30$; RACE$\times$PI $0.38/0.26/0.29$; RACE$\times$RELIG
+$0.47/0.28/0.30$; RACE$\times$PI $0.38/0.26/0.29$; RACE$\times$RELIG
 $0.29/0.16/0.17$. (This pipeline's held-out variant selects on the mean
 of three templates and is slightly more conservative than the one behind
 Table~\ref{tab:map}; comparisons are valid within this table only.)
@@ -320,8 +342,7 @@ here for
 completeness. We had implemented a group-consistency auxiliary loss
 $L_{\text{group}}$ that pulls the model's predictions for demographically
 similar cells together, weighting pairs by a kernel $w_{ij}$ built from
-last-token residual-stream embeddings. The pilot failed, and the
-diagnosis is what led to this paper:
+last-token residual-stream embeddings. The pilot failed; the diagnosis:
 
 \begin{enumerate}
   \item $L_{\text{group}}$ performed no better than a plain probe, and
@@ -348,8 +369,8 @@ $\lVert\overline{v}\rVert / \overline{\lVert v\rVert}$ over the 169 cell
 embeddings is $0.950$ (it would be $\approx0$ for randomly oriented
 vectors and $1$ if all vectors were identical in direction). At layer 17
 the pairwise cosine distances have median $0.10$ and maximum $0.27$; the
-\emph{same-type} pairs---exactly those the task must separate---are the
-tightest (maximum $0.12$).
+\emph{same-type} pairs, which are the ones the task must separate, are
+the tightest (maximum $0.12$).
 
 Removing the shared direction ($v_i \leftarrow v_i - \overline{v}$) nearly
 doubles the pooled correlation ($+0.185 \to +0.301$ at layer 17,

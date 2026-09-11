@@ -1,13 +1,13 @@
 \section{Robustness and Generality}
 \label{sec:robustness}
-Sensitivity analyses reported in the main text: multi-template fragility
-(Sec.~\ref{sec:act2}), selection- and cluster-corrected statistics
-throughout (Sec.~\ref{sec:setup-selection}), the lexical-baseline control
-(Sec.~\ref{sec:lexical}), reliability ceilings
+The sensitivity analyses above are internal checks: multi-template
+fragility (Sec.~\ref{sec:act2}), selection- and cluster-corrected
+statistics throughout (Sec.~\ref{sec:setup-selection}), the
+lexical-baseline control (Sec.~\ref{sec:lexical}), reliability ceilings
 (Appendix~\ref{app:reliability}), survey-ruler sensitivity
 (Appendix~\ref{app:dreal-sens}), and the identity-swap ceiling on an
-instruction-tuned model (Sec.~\ref{sec:ceiling}). This section adds the
-external check: a cross-model replication.
+instruction-tuned model (Sec.~\ref{sec:ceiling}). This section adds an
+external one: a cross-model replication.
 % GSS (cross-institution) diputuskan DIHAPUS 2026-08-19 -> future work di
 % Limitations. Kalau mau dihidupkan lagi: fixed-location test di starhead
 % + full re-discovery lawan jarak antar-kelompok versi GSS.
@@ -21,7 +21,42 @@ identical checkpoints that differ only in human-simulation training
 \citep{odyssim2026}: Qwen3-8B-Base, OSim-8B-Mid (midtrained on a
 10B-token behavioral corpus), and OSim-8B (post-RL)---identical prompts,
 cells, and analysis pipeline, with the pipeline itself validated by
-reproducing the Mistral map from raw activations. Four results:
+reproducing the Mistral map from raw activations. Table~\ref{tab:crossmodel}
+reports the per-type numbers behind the first three results below.
+
+\begin{table}[t]
+\centering\footnotesize
+\setlength{\tabcolsep}{3pt}
+\caption{Cross-model replication of the fidelity map. \emph{head/resid} =
+selected best head vs.\ best residual read-out (the comparison of
+result~1).
+$\rrho_{\text{ho}}$ = held-out-template fidelity, with the
+selection-corrected max-statistic $p$ in parentheses
+($2{,}000$ permutations, so $p<.0005$ is the floor). The Mistral column
+repeats that model's held-out head value under the symmetric correction
+of Sec.~\ref{sec:act2} for reference; cell sets are identical across
+models.}
+\label{tab:crossmodel}
+\begin{tabular}{lccccccc}
+\toprule
+& Mistral & \multicolumn{2}{c}{Qwen3-8B-Base}
+& \multicolumn{2}{c}{OSim-8B-Mid} & \multicolumn{2}{c}{OSim-8B (post-RL)}\\
+\cmidrule(lr){2-2}\cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(lr){7-8}
+Type & $\rrho_{\text{ho}}$ & head/resid & $\rrho_{\text{ho}}$ ($p$)
+& head/resid & $\rrho_{\text{ho}}$ ($p$)
+& head/resid & $\rrho_{\text{ho}}$ ($p$)\\
+\midrule
+AGE$\times$POLPARTY & 0.52 & 0.78/0.50 & 0.49\,($<$.0005) & 0.74/0.50 & 0.61\,($<$.0005) & 0.73/0.51 & 0.57\,($<$.0005) \\
+EDUCATION$\times$INCOME & 0.54 & 0.70/0.51 & 0.58\,($<$.0005) & 0.68/0.50 & 0.54\,($<$.0005) & 0.68/0.53 & 0.60\,($<$.0005) \\
+RELIG$\times$POLPARTY & 0.44 & 0.57/0.37 & 0.56\,($<$.0005) & 0.58/0.39 & 0.56\,($<$.0005) & 0.56/0.38 & 0.55\,($<$.0005) \\
+RACE$\times$POLPARTY & 0.47 & 0.60/0.37 & 0.37\,(.001) & 0.57/0.38 & 0.38\,(.002) & 0.63/0.37 & 0.46\,($<$.0005) \\
+RACE$\times$POLIDEOLOGY & 0.38 & 0.59/0.35 & 0.38\,($<$.0005) & 0.62/0.36 & 0.38\,($<$.0005) & 0.60/0.35 & 0.40\,($<$.0005) \\
+RACE$\times$RELIG & 0.29 & 0.41/0.35 & 0.29\,(.15) & 0.45/0.36 & 0.30\,(.062) & 0.43/0.33 & 0.22\,(.096) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Four results:
 
 \begin{enumerate}
   \item \textbf{Heads dominate the residual stream in a second model
@@ -39,14 +74,13 @@ reproducing the Mistral map from raw activations. Four results:
   \item \textbf{A general demographic-geometry head exists here too, at
         a family-specific address.} Head L33\,H9, held fixed across all
         six types and all three checkpoints, scores $\rrho=0.35$--$0.58$
-        in five types (per-location permutation $p\le0.002$) and---like
-        \starhead{} in Mistral---is weakest exactly on
-        RACE$\times$RELIG ($0.22$--$0.25$). The same provenance caveat
+        in five types (per-location permutation $p\le0.002$) and, like
+        \starhead{} in Mistral, is weakest on RACE$\times$RELIG
+        ($0.22$--$0.25$). The same provenance caveat
         applies symmetrically: L33\,H9 was noticed as one type's winner,
         so its selection-free evidence is its scores on the other five
-        types, stable across checkpoints. The \emph{address} is
-        family-specific (late-stack here, mid-stack in Mistral); the
-        \emph{phenomenon} is not.
+        types, stable across checkpoints (late-stack here, mid-stack in
+        Mistral).
   \item \textbf{Ten billion tokens of behavioral simulation training
         barely change either the map or the mouth.} Base $\to$ post-RL
         held-out fidelity moves by $-0.07$ to $+0.09$ per type with no

@@ -20,28 +20,27 @@ cross-national survey structure---GlobalOpinionQA against World Values
 Survey and Pew Global Attitudes items \citep{globalopinions2023}, and
 ChatGPT responses against Hofstede's culture dimensions
 \citep{culturalalign2023}. All
-of these treat the model as a black box; none examines internal
-representations.
+of these treat the model as a black box.
 
 \paragraph{Reading opinions from inside (the closest neighbor).}
 \citet{llmopinions2026} show linear probes on internal activations recover
 per-group opinion distributions \emph{better than the model's own
 generated outputs}, extract activations down to individual attention
-heads, and steer outputs by patching SAE features. Crucially, all of
+heads, and steer outputs by patching SAE features. All of
 their measurement is \emph{first-order}: each group's read-out is scored
 against that group's own distribution. Whether the \emph{inter-group
 geometry} at any location mirrors real inter-group opinion structure---the
 property every neighbor-borrowing and generalization application depends
-on---is not among their measurements.\footnote{Verified against the ICLR
-2026 camera-ready paper (OpenReview \texttt{kHVzEjThKE}) and the authors'
-released repository (\texttt{schang-lab/llm-opinions}): all four reported
+on---is not among their measurements.\footnote{Their four reported
 methods---linear probing, SAE feature analysis, SAE-based steering, and
-fine-tuning---are first-order, per-group comparisons; no inter-group RSA
-or distance-matrix analysis is described.} Our work is
+fine-tuning---are all first-order, per-group comparisons (ICLR 2026
+camera-ready, OpenReview \texttt{kHVzEjThKE}; repository
+\texttt{schang-lab/llm-opinions}); no inter-group RSA or distance-matrix
+analysis is described.} Our work is
 the second-order complement: probe accuracy
 is a phone book (accurate per entry); we ask whether the entries are
 \emph{arranged as a map}. Two output-side works come closest to that
-question and sharpen what remains open: \citet{personamanifold2026}
+question: \citet{personamanifold2026}
 correlate the separation of persona-conditioned final-layer embeddings and
 outputs with human subgroup disagreement, and \citet{beyondmarginals2026}
 test whether demographically aligned models reproduce the human
@@ -50,7 +49,7 @@ behavioral or last-layer structure, not the geometry of internal
 representations against a human inter-group distance matrix. Layer-wise
 RSA of internal LLM geometry against human similarity structure exists
 for \emph{perceptual} domains, where alignment peaks mid-stack and fades
-with depth \citep{perceptualgeom2026}---strikingly parallel to what we
+with depth \citep{perceptualgeom2026}---a parallel to what we
 find for demographic identity. To our knowledge, no prior work scores the
 internal inter-group geometry of demographic representations against real
 survey opinion structure.
@@ -90,13 +89,7 @@ to helpfulness-driven post-training and rebuilds a behavioral foundation
 model to close it---while explicitly noting that better \emph{average}
 human simulation does not imply faithful \emph{subpopulation} simulation.
 Persona effects on moral stances are strongest for political ideology and
-personality \citep{socratic2025}, an output-level hierarchy that parallels
-our representation-level fidelity ranking. Foundational annotation work
+personality \citep{socratic2025}. Foundational annotation work
 \citep{socialchem2020,annotators2022} established that human judgments are
 distributions conditioned on who answers---the premise of our entire
 evaluation. None of this line opens the model.
-
-\paragraph{Our position.} We supply the missing bridge: internal geometry
-(interpretability's territory) scored against population ground truth
-(simulation's territory), localized systematically, with the causal
-follow-up of whether the model \emph{uses} what it faithfully encodes.

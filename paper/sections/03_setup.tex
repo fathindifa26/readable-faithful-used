@@ -14,6 +14,20 @@ of demographic attribute values (e.g., \textit{race=Asian $\times$
 religion=Hindu}), yielding $169$ cells across six attribute types
 (AGE$\times$POLPARTY, EDUCATION$\times$INCOME, RACE$\times$RELIG,
 RACE$\times$POLPARTY, RACE$\times$POLIDEOLOGY, RELIG$\times$POLPARTY).
+These six pairs are a purposive, not exhaustive, sample of the
+$\binom{12}{2}=66$ possible attribute pairs in this corpus. Two
+(RACE$\times$RELIG, RACE$\times$POLPARTY) directly instantiate a
+dimension the closest prior work names as an open question: how to
+``ensure that LLMs faithfully capture opinions along other dimensions
+that are not explored in this work, such as intersections of demographic
+identities'' \citep[p.~9]{subpop2025}---in our cell set, e.g.,
+\textit{White Mormon}, \textit{Asian Republican}. The remaining four were
+chosen to span distinct social/political axes rather than for data
+richness. By number of cells clearing the $n\geq30$ threshold, our six
+rank 7th to 44th among all 66 pairs, so selection was not biased toward
+the best-populated ones (Appendix~\ref{app:data}). The
+pairs were fixed, and the underlying cell data built, before any
+fidelity or causal result was computed on them.
 For groups $i,j$ the ground-truth distance is the mean Wasserstein
 distance between their answer distributions over shared questions
 (up to 300 sampled per pair):
@@ -34,12 +48,16 @@ For each group we build identity prompts and extract, at the final token,
 attention head's output before the out-projection
 ($32\times32=1{,}024$ locations; the same read point used by
 \citealp{llmopinions2026}), and (iii) each FFN block output ($32$
-locations), from Mistral-7B \citep{mistral7b}. The causal experiments of
-Sec.~\ref{sec:gap} use activation patching in the tradition of causal
-tracing and circuit analysis \citep{meng2022rome, wang2023ioi}, following
-current methodological guidance \citep{heimersheim2024} and mindful
-of the documented reliability limits of causal probing interventions
-\citep{causalprobing2025}. The model-side RDM at
+locations), from Mistral-7B \citep{mistral7b}---our primary model
+throughout. The same read-out protocol is reapplied unchanged to a second
+model family in Sec.~\ref{sec:crossmodel} (Qwen3-8B-Base and two OdysSim
+checkpoints, whose 36-layer stack yields $37+1{,}152+36=1{,}225$
+locations by the same construction) and to Mistral-7B-Instruct-v0.2 for
+the identity-swap ceiling in Sec.~\ref{sec:ceiling}. The causal
+experiments of Sec.~\ref{sec:gap} use activation patching
+\citep{meng2022rome, wang2023ioi}, following \citet{heimersheim2024} and
+mindful of documented reliability limits \citep{causalprobing2025}. The
+model-side RDM at
 location $\ell$ uses cosine distances between group representations.
 
 \subsection{Multi-cue prompts}
@@ -49,7 +67,8 @@ identity'' \citep{constructvalidity2026}. We therefore use four templates
 per group (third-person declarative, first-person, structured profile,
 and QA format ending in \texttt{Answer:}---the read-out position validated
 by \citealp{llmopinions2026}) and additionally a template-averaged
-representation (\textsc{Tmean}). Template disagreement is reported as a
+representation (\textsc{Tmean}); the four are reproduced verbatim in
+Appendix~\ref{app:templates}. Template disagreement is reported as a
 fragility diagnostic.
 
 \subsection{Fidelity: second-order comparison}
@@ -84,8 +103,9 @@ Two further disciplines apply to the causal experiments
 type contributes 12 donor--recipient pairs $\times$ 20 questions, and
 items within a pair share the persona and its idiosyncrasies. All causal
 $p$-values are therefore computed at the \emph{pair} level (sign-flip
-permutation over 12 clusters, enumerated exactly), with item-level
-statistics shown only as descriptive detail. Second, because the
-survey-side ruler could itself be confounded by lexical similarity of the
-identity words, Sec.~\ref{sec:act2} reports fidelity after partialling
-out a lexical-baseline RDM.
+permutation over 12 clusters, enumerated exactly;
+Appendix~\ref{app:cluster}), with item-level statistics shown only as
+descriptive detail. Second, because the survey-side ruler could itself be
+confounded by lexical similarity of the identity words,
+Sec.~\ref{sec:act2} reports fidelity after partialling out a
+lexical-baseline RDM (Appendix~\ref{app:lexical}).

@@ -81,19 +81,22 @@ This is the paper's core arc, and it reversed direction twice.
    tracks fidelity."
 3. **A 32-layer sweep breaks that story** (`07_sweep_and_probe`, extended
    to 6 types in `08_probe_causal_dissociation`): under max-statistic
-   permutation correction across all 32 layers, RACE turns out to have its
-   *real* causal locus not at L11 but at **L1** — the earliest layer,
-   p=0.0020, stronger than AGE's L11 effect. Precision (small variance)
-   beats raw magnitude once corrected properly.
+   permutation correction across all 32 layers, RACE×RELIGION's causal
+   signal turns out to sit not at L11 but at **L1** — the earliest layer
+   (p=0.016) — though that column isn't selection-free for this type: L1
+   was itself noticed in the sweep that included RACE×RELIGION. Precision
+   (small variance) beats raw magnitude once corrected properly.
 4. **The 6-type sweep kills "graded, tracks fidelity" outright**
    (`08_probe_causal_dissociation`, finding 11): RACE×POLIDEOLOGY — one of
    the *least* faithful types on the Act 2 map — has the **strongest**
-   causal locus of all six, at L11 (exact pair-level p=0.0005).
-   EDUCATION×INCOME — the most faithful type under the held-out ruler
-   (AGE×POLPARTY leads under split-half, and fails every correction
-   too) — has **no correction-surviving single-layer causal locus
-   anywhere**, despite having the largest raw
-   ceiling and output movement available to it. (Every patch here is
+   causal locus of all six, at L11 (exact pair-level p=0.0020; the
+   item-level descriptive statistic reads even lower, p=0.0005, but that's
+   the inflated number — 240 items are not 240 independent trials).
+   EDUCATION×INCOME — despite the largest output ceiling (0.0194) and the
+   largest raw shift of any type at any layer — has **no
+   correction-surviving single-layer causal locus anywhere** (p=0.82); nor
+   does AGE×POLPARTY, the type that actually leads under the split-half
+   fidelity ruler (p=0.022, fails every correction). (Every patch here is
    applied at one layer, so redundant encoding across layers stays an
    alternative reading the paper states rather than rules out.) Spearman correlation between fidelity
    and causal strength across three independent fidelity rulers

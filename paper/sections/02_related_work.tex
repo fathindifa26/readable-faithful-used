@@ -7,89 +7,80 @@
 
 \paragraph{LLMs as survey simulators (the ground-truth side).}
 ``Silicon sampling'' was introduced by \citet{argyle2023} and has since
-been contested on multiple grounds: response instability and
-survey-format sensitivity \citep{dominguez2024, rottger2024}, systematic
-divergence from human samples \citep{bisbee2024}, and bounded persona
-effects \citep{hucollier2024}. SubPOP \citep{subpop2025} fine-tunes LLMs
-to predict per-group response distributions with a KL objective,
-achieving strong in-distribution accuracy but degraded transfer to unseen
-surveys. Rectification methods
+been contested: response instability and survey-format sensitivity
+\citep{dominguez2024, rottger2024}, systematic divergence from human
+samples \citep{bisbee2024}, and bounded persona effects
+\citep{hucollier2024}. SubPOP \citep{subpop2025} fine-tunes LLMs to
+predict per-group response distributions with a KL objective, with strong
+in-distribution but degraded out-of-survey accuracy; rectification methods
 \citep{rectification2025} combine limited human data with synthetic
-responses. Cultural-alignment work compares model \emph{outputs} to
-cross-national survey structure---GlobalOpinionQA against World Values
-Survey and Pew Global Attitudes items \citep{globalopinions2023}, and
-ChatGPT responses against Hofstede's culture dimensions
-\citep{culturalalign2023}. All
-of these treat the model as a black box.
+responses. Cultural-alignment work compares model
+\emph{outputs} to cross-national survey structure---GlobalOpinionQA
+against World Values Survey and Pew Global Attitudes items
+\citep{globalopinions2023}, and ChatGPT responses against Hofstede's
+dimensions \citep{culturalalign2023}. All treat the model as a black box.
 
 \paragraph{Reading opinions from inside (the closest neighbor).}
 \citet{llmopinions2026} show linear probes on internal activations recover
 per-group opinion distributions \emph{better than the model's own
-generated outputs}, extract activations down to individual attention
-heads, and steer outputs by patching SAE features. All of
-their measurement is \emph{first-order}: each group's read-out is scored
-against that group's own distribution. Whether the \emph{inter-group
-geometry} at any location mirrors real inter-group opinion structure---the
-property every neighbor-borrowing and generalization application depends
-on---is not among their measurements.\footnote{Their four reported
+generated outputs}, extract activations down to attention heads, and
+steer outputs via SAE patching. All their measurement is
+\emph{first-order}: each group's read-out is scored against that group's
+own distribution. Whether the \emph{inter-group geometry} at any location
+mirrors real inter-group opinion structure---the property generalization
+depends on---is not among their measurements.\footnote{Their four reported
 methods---linear probing, SAE feature analysis, SAE-based steering, and
 fine-tuning---are all first-order, per-group comparisons (ICLR 2026
 camera-ready, OpenReview \texttt{kHVzEjThKE}; repository
 \texttt{schang-lab/llm-opinions}); no inter-group RSA or distance-matrix
 analysis is described.} Our work is
 the second-order complement: probe accuracy
-is a phone book (accurate per entry); we ask whether the entries are
-\emph{arranged as a map}. Two output-side works come closest to that
-question: \citet{personamanifold2026}
-correlate the separation of persona-conditioned final-layer embeddings and
-outputs with human subgroup disagreement, and \citet{beyondmarginals2026}
-test whether demographically aligned models reproduce the human
-item--item correlation structure beyond marginals---both compare
-behavioral or last-layer structure, not the geometry of internal
-representations against a human inter-group distance matrix. Layer-wise
-RSA of internal LLM geometry against human similarity structure exists
-for \emph{perceptual} domains, where alignment peaks mid-stack and fades
-with depth \citep{perceptualgeom2026}---a parallel to what we
-find for demographic identity. To our knowledge, no prior work scores the
-internal inter-group geometry of demographic representations against real
-survey opinion structure.
+is a phone book, accurate per entry; we ask whether the entries are
+\emph{arranged as a map}. Two works come closest:
+\citet{personamanifold2026}
+correlate persona-conditioned final-layer separation with human subgroup
+disagreement, and \citet{beyondmarginals2026}
+test whether aligned models reproduce human item--item correlation beyond
+marginals---both compare behavioral or last-layer structure, not internal
+geometry against a human inter-group distance matrix. Layer-wise RSA of
+LLM geometry against human similarity structure exists for
+\emph{perceptual} domains, peaking
+mid-stack and fading with depth \citep{perceptualgeom2026}---a parallel to
+our demographic-identity finding.
 % Verifikasi camera-ready 2026-08-19: PDF OpenReview dibaca penuh langsung
 % oleh penulis (bukan lewat repo/ringkasan) -- dikonfirmasi first-order
 % semua, tak ada RSA/distance-matrix.
 
 \paragraph{Localizing social attributes (the interpretability side).}
 \citet{kimevans2025} localize political ideology to attention heads and
-validate against legislator vote-based scores (DW-NOMINATE)---the closest
-methodological relative, for one attribute and elite text; a follow-up
-line locates a single partisan axis at one mid-stack layer and steers
-along it \citep{partisandir2026}.
-\citet{personalocal2025} localize persona representations without external
-ground truth, \citet{sociodemo2025} probe linear socio-demographic
-associations arising from indirect cues across layers, and
-\citet{personapatch2025} localize persona processing with activation
-patching---again without survey ground truth. Per-layer RSA has been applied to LLMs for other content
+validate against legislator vote-based scores (DW-NOMINATE)---our closest
+methodological relative (one attribute, elite text); a follow-up locates a
+single partisan axis mid-stack and steers along it
+\citep{partisandir2026}.
+\citet{personalocal2025,sociodemo2025,personapatch2025} localize persona
+and socio-demographic representations---via linear probing across layers
+and activation patching---without survey ground truth.
+Per-layer RSA applies to LLMs in other content
 domains \citep{assoc2026}. ``Diversity collapse'' \citep{divcollapse2026}
-documents that social-identity representations become less separable with
-depth---consistent with our anisotropy findings---but does not measure
-fidelity to real opinion structure. Construct-validity critiques of
+documents social-identity representations becoming less separable with
+depth---consistent with our anisotropy findings---but not fidelity to real
+opinion structure. Construct-validity critiques of
 persona prompting \citep{constructvalidity2026} motivate our multi-cue
-design. Closest to our dissociation result,
-\citet{personaprefs2026} find preference machinery largely shared across
-personas---probes and steering vectors transfer between opposed
-personas---converging from the steering side with our finding that what a
-location encodes and what the model answers with are separable
-properties.
+design. \citet{personaprefs2026} find preference machinery largely shared
+across personas---probes and steering vectors transfer between opposed
+personas---converging with our dissociation between what a location
+encodes and what the model answers with.
 
 \paragraph{The behavioral Sim2Real gap (the motivation side).}
-The Sap-group program documents, from the outside, that LLM simulators are
+The Sap-group program documents from outside that LLM simulators are
 homogeneous and overly cooperative: 451-human comparisons show the best of
 31 simulators reaches only USI 76.0 vs.\ a 92.7 human baseline
 \citep{sim2real2026}, and OdysSim \citep{odyssim2026} attributes the gap
 to helpfulness-driven post-training and rebuilds a behavioral foundation
-model to close it---while explicitly noting that better \emph{average}
+model to close it---noting that better \emph{average}
 human simulation does not imply faithful \emph{subpopulation} simulation.
 Persona effects on moral stances are strongest for political ideology and
 personality \citep{socratic2025}. Foundational annotation work
 \citep{socialchem2020,annotators2022} established that human judgments are
-distributions conditioned on who answers---the premise of our entire
-evaluation. None of this line opens the model.
+distributions conditioned on who answers---our evaluation's premise.
+None of this line opens the model.

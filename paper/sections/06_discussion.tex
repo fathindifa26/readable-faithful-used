@@ -1,0 +1,59 @@
+\section{Discussion}
+\label{sec:discussion}
+% ------------------------------------------------------------
+% Sumber: §13.8.3, §13.9, finding 07 §posisi-kita.
+% ------------------------------------------------------------
+
+\paragraph{Three properties, three literatures.}
+``Can LLMs simulate populations?'' conflates three claims. Prior work
+established property (i), \emph{readable} \citep{llmopinions2026}, and
+documented the behavioral symptom from outside
+(\citealp{sim2real2026,odyssim2026}). We establish property (ii),
+\emph{faithfully arranged}---at specific locations, unevenly across
+attribute types---and show that property (iii), \emph{causally used}, is
+not a function of it. Under cluster-robust inference, causal use is not
+absent---one type shows a clear, Bonferroni-surviving pathway at L11, and
+two more are suggestive---but it does not follow the map
+(Sec.~\ref{sec:sweep}). Natural-prompt simulation therefore does not fail
+simply because the map is weak; a good map is no guarantee the model
+consults it.
+
+\paragraph{A mechanistic candidate for the Sim2Real gap---and a warning
+about explaining it by representation quality.}
+Behavioral homogeneity of LLM simulators is well measured from outside
+\citep{sim2real2026}. Our results offer a consistent inside account:
+outputs vary little across personas overall
+(Sec.~\ref{sec:ceiling}), and forcing identity through the network moves
+them only slightly under a deliberately strong instrument. What our
+results do \emph{not} support is that simulation fails because the
+internal representation is poor: homogeneity looks like at least two
+mechanisms---insufficient causal throughput where the map is good, and no
+good map to throughput where it is not. One qualification: the behavioral
+literature evaluates post-trained assistants, whereas we measure a base
+model; since post-training is itself a plausible cause of
+homogenization, our results establish only that a representational
+component of homogeneity predates post-training, rather than explaining
+any particular assistant's behavior.
+
+\paragraph{Why surface fine-tuning may not transfer.}
+SubPOP-style fine-tuning \citep{subpop2025} improves in-distribution
+accuracy but degrades on unseen surveys. If faithful structure already
+exists internally, output-surface fine-tuning may re-teach what the model
+already encodes---a survey-specific surface mapping instead of a
+connection to the existing map. This is a testable hypothesis, not a
+demonstrated mechanism; the direct test (does reading from the faithful
+location transfer where surface fine-tuning does not?) is future work.
+
+\paragraph{Practical guidance now.}
+For population simulation: check second-order fidelity before relating
+groups, treat demographic attributes as heterogeneous
+(Sec.~\ref{sec:act2}), and measure identity conditioning rather than
+assume it. \textbf{Do not steer through a single apparently-faithful unit
+without a corruption control}: our causal analysis's most consistent
+effect is a \emph{harmful} one from doing exactly this
+(RACE$\times$RELIG, \starhead{} alone, wrong direction,
+$p_{\text{pair}}=1/4096$; Sec.~\ref{sec:v2}). Read a per-group
+distribution rather than ask for it: a linear probe on \starhead{} alone
+lands $21$--$31\%$ closer to survey truth than the model's own answers
+(Sec.~\ref{sec:probe}), yet a group-blind baseline still wins on
+per-question ordering.

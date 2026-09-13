@@ -1,0 +1,288 @@
+\section{Results I: Where Demographic Geometry Is Faithful}
+\label{sec:act2}
+% ------------------------------------------------------------
+% Sumber: findings 01-06, 12. Ini bagian inti paper (mekanis digabung
+% dari Sec. 4+5+7 lama oleh Agent B, restrukturisasi 2026-09-13).
+% Figur wajib: (F1) kurva rho per layer resid/mlp per tipe,
+% (F2) heatmap head 32x32 per tipe (-> appendix), (F3) tabel held-out vs
+% inflated, (F4) L11H16 fixed-location bar per tipe.
+% ------------------------------------------------------------
+
+\subsection{The standard residual read-out understates the model}
+\label{sec:act1}
+% Sumber: findings 01-04. Karakterisasi "elektroda standar" + motivasi peta.
+The read-out used implicitly across the LLM-survey literature---last-token
+residual stream, cosine distance, one prompt template---paints a bleak
+picture, but a misleading one. Pooled fidelity is $\rrho\approx0.17$
+(peak at layer 17), but this pools unequal types: AGE$\times$POLPARTY
+and EDUCATION$\times$INCOME reach $\rrho\approx0.50$ while
+RACE$\times$RELIG is $\rrho=0.07$ (n.s.), and cross-type pairs correlate
+\emph{negatively}, so distances are only meaningful within a type.
+Group embeddings are severely anisotropic
+($\lVert\bar{x}\rVert/\overline{\lVert x\rVert}=0.95$): mean-centering
+doubles the pooled correlation ($0.185\!\to\!0.301$) yet \emph{decreases}
+within-type correlation in all three types measured---a between-type
+scale artifact we do not adopt anywhere in this paper
+(Appendices~\ref{app:centering} and~\ref{app:anisotropy}). Top-5 neighbor
+precision against ground truth is ${\sim}2\times$ chance in all six
+types but only $0.35$--$0.48$ absolute, and applications that borrow
+statistical strength from neighbors inherit this noise: a
+consistency-regularization pilot built on this read-out failed
+accordingly (Appendix~\ref{app:lgroup}).
+
+Weakness of \emph{one} read-out does not establish weakness of the
+\emph{model}: the residual stream sums all attention heads and FFN
+blocks, so signal carried by a few components can be diluted by the
+rest. The next subsection reads every component separately.
+
+\subsection{Attention heads dominate the residual stream}
+% finding 05 tabel utama
+The best attention-head read-out exceeds the best residual-stream
+read-out in every attribute type, with the largest gains where the
+standard read-out was weakest (RELIG$\times$POLPARTY:
+$0.26\!\to\!0.60$; RACE$\times$POLPARTY: $0.34\!\to\!0.61$;
+Table~\ref{tab:map}); under the symmetric correction of
+Sec.~\ref{sec:symmetric} this holds in five of six types, reversing in
+none. Multi-cue averaging alone already helps (RACE$\times$RELIG
+residual: $0.07\!\to\!0.27$ \textsc{Tmean}), so part of the apparent
+weakness was operationalization noise. Figure~\ref{fig:layercurve} shows
+this is not one lucky depth: the best head within a layer beats that
+layer's residual stream at nearly every depth in all six types (residual
+wins at only 3 of $186$ layer--type points), while the FFN output tracks
+the residual stream rather than the heads---consistent with dilution at
+the summation, not a failure to encode the signal.
+
+Those per-layer curves take the \emph{best} head at each depth and are
+selection-contaminated; averaging $\rrho$ over all 32 heads of a layer
+instead gives a selection-free view of which depths carry the structure
+(Table~\ref{tab:layerblock} in Appendix~\ref{app:quarter-table}). The
+first quarter of the stack is uniformly the weakest block, and the peak
+is not uniformly mid-stack: it emerges latest for RACE$\times$RELIG,
+whose block means rise monotonically into the final quarter---the
+weakest type is thus also the slowest to build up.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{fig_layercurve}
+\caption{Fidelity by depth and component (multi-cue \textsc{Tmean}
+read-out): orange = best of 32 heads per layer, blue = residual stream,
+dashed green = FFN output. Dotted line marks layer 11. Maxima here are
+selected/uncorrected; Table~\ref{tab:map} gives held-out values.}
+\label{fig:layercurve}
+\end{figure}
+
+\begin{table}[t]
+\centering
+\caption{Fidelity ($\rrho$ vs.\ survey ground truth) by read-out.
+\emph{Selected} = maximum over locations; \emph{held-out} =
+selection-corrected range from two independent corrections (held-out
+template, Appendix~\ref{app:selection}; split-half median), on the
+NaN-cleaned cell set.}
+\label{tab:map}
+\begin{tabular}{lcccc}
+\toprule
+Type & Residual best & Head best (selected) & Head (held-out) & Best loc.\\
+\midrule
+AGE$\times$POLPARTY      & $+0.51$ & $+0.74$ & $+0.59$--$0.63$ & L11 H19\\
+EDUCATION$\times$INCOME  & $+0.61$ & $+0.68$ & $+0.58$--$0.63$ & L14 H1\\
+RELIG$\times$POLPARTY    & $+0.26$ & $+0.60$ & $+0.50$--$0.52$ & \starhead\\
+RACE$\times$POLPARTY     & $+0.34$ & $+0.61$ & $+0.41$--$0.52$ & L23 H13\\
+RACE$\times$POLIDEOLOGY  & $+0.40$ & $+0.50$ & $+0.30$--$0.41$ & L8 H21\\
+RACE$\times$RELIG        & $+0.27$ & $+0.45$ & $+0.21$--$0.32$ & L28 H0\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Controls: selection, geometry, and lexical confounds}
+\label{sec:symmetric}
+% finding 06 cek 1-3 + review B1 (residual held-out, proyeksi acak)
+% review A2: konfound leksikal + partial Spearman. Angka:
+% notebooks/output/14_.../lexical_partial.csv (analisis_lokal/lexical_baseline.py)
+Max-statistic permutation tests (Sec.~\ref{sec:setup-selection}) show
+pure noise picking its champion among 1{,}024 heads reaches only
+$\rrho\approx0.34$--$0.46$ (95th null percentile), exceeded by the
+observed maxima in all six types ($p<0.0005$ in four; $0.0025$,
+$0.0155$ in the rest). Held-out-template and split-half estimates agree
+(Table~\ref{tab:map}); head \emph{choice} is stable under resampling for
+most types (\starhead{} re-selected in 87/200 splits for
+RELIG$\times$POLPARTY) but a lottery for RACE$\times$RELIG.
+
+\paragraph{Symmetric correction and a geometry control.} That comparison
+is also unequal in dimensionality: 128-dimensional heads might beat the
+anisotropic 4{,}096-dimensional stream for geometric, not informational,
+reasons. One pipeline with identical selection over three
+families---1{,}024 heads, 33 residual layers, and 1{,}024 random
+128-dimensional projections of the residual stream (Appendix~\ref{app:randproj})---shows
+heads winning in five of six types, with projections tracking the
+residual stream rather than the heads, so the advantage is not a
+dimensionality artifact; the exception, EDUCATION$\times$INCOME, has a
+thin margin, where the standard read-out is already close to the best we
+find (Table~\ref{tab:controls}).
+
+\paragraph{A ceiling for fidelity.} A correlation of $0.63$ means
+something different under a ceiling of $0.70$ than under $0.95$.
+Survey-side split-half reliability is $0.985$--$0.994$; model-side
+reliability across template halves at \starhead{} is $0.72$--$0.94$,
+giving an attenuation ceiling $\sqrt{r_{\text{survey}}\,r_{\text{model}}}
+= 0.84$--$0.96$ per type (observed fidelity reaches $39$--$74\%$ of it,
+Table~\ref{tab:controls}): the unexplained residual is real signal the
+representation lacks, not an artifact of a noisy ruler.
+
+\begin{table}[t]
+\centering\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{Every control in Sec.~\ref{sec:act2}, per attribute type.
+$p_{\text{sel}}$: selection-corrected max-statistic $p$. head/resid/proj:
+held-out fidelity of the three families (proj = random 128-d
+projections). \% ceil: \starhead{} fidelity as a fraction of the
+attenuation ceiling. partial $\rrho$: \starhead{} fidelity partialling
+out the lexical-baseline RDM.}
+\label{tab:controls}
+\begin{tabular}{lccccccc}
+\toprule
+& \multicolumn{1}{c}{selection} & \multicolumn{3}{c}{symmetric + geometry (held-out)}
+& \multicolumn{1}{c}{ceiling} & \multicolumn{2}{c}{lexical}\\
+\cmidrule(lr){2-2}\cmidrule(lr){3-5}\cmidrule(lr){6-6}\cmidrule(lr){7-8}
+Type & $p_{\text{sel}}$ & head & resid & proj & \% ceil & partial $\rrho$ & $p$\\
+\midrule
+AGE$\times$POLPARTY & $<$.0005 & 0.52 & 0.39 & 0.42 & 74\% & 0.59 & $<$.0005 \\
+EDUCATION$\times$INCOME & $<$.0005 & 0.54 & 0.51 & 0.49 & 70\% & 0.35 & $<$.0005 \\
+RELIG$\times$POLPARTY & $<$.0005 & 0.44 & 0.17 & 0.18 & 68\% & 0.59 & $<$.0005 \\
+RACE$\times$POLPARTY & $<$.0005 & 0.47 & 0.28 & 0.30 & 69\% & 0.58 & $<$.0005 \\
+RACE$\times$POLIDEOLOGY & .0025 & 0.38 & 0.26 & 0.29 & 53\% & 0.37 & $<$.0005 \\
+RACE$\times$RELIG & .0155 & 0.29 & 0.16 & 0.17 & 39\% & 0.23 & .056 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Not an artifact of the identity words themselves.}
+\label{sec:lexical}
+The prompts differ across cells only in the attribute-value words
+(``Democrat'', ``Hindu'', ``30--49'', \dots), whose lexical similarity
+correlates with real opinion similarity, so the map could be a mere copy
+of word similarity. A baseline RDM built from a small sentence encoder
+\citep{minilm2020} (value words alone, and the full identity sentence)
+is correlated with survey truth; we report each read-out's
+\emph{partial} Spearman correlation after controlling for it, by
+cell-label permutation.
+
+The confound is real but does not explain the map: the baseline
+alone reaches $\rrho=0.21$--$0.64$ (largest for EDUCATION$\times$INCOME,
+whose value words are ordered), yet \starhead's fidelity controlling for
+it remains $\rrho=0.35$--$0.59$ ($p<0.0005$) in five of six types, with
+the largest drop for EDUCATION$\times$INCOME ($0.67\!\to\!0.35$),
+consistent with its word-order structure. The exception is again
+RACE$\times$RELIG: partial fidelity there is $0.23$ ($p=0.056$; the
+type's best head survives at $0.41$, $p=0.0015$)---the fourth control
+this type is weakest under (Table~\ref{tab:controls}). For word-ordered
+types, though, some of the raw correlation is lexical.
+
+\subsection{A general demographic-geometry head}
+% finding 06 bonus — klaim bintang
+Fixing \starhead{} in advance (no per-type re-selection) yields
+significant fidelity in \emph{all six} types ($\rrho=0.33$--$0.67$;
+$p<0.001$ each, surviving a conservative $\times1024$ Bonferroni): a
+single head, one of 1{,}024, tracks real opinion structure across age,
+education, income, religion, party, ideology, and (weakly) race
+(Figure~\ref{fig:starhead}), and, being fixed before
+scoring, is structurally immune to the per-type winner's curse of
+Sec.~\ref{sec:setup-selection}. One provenance caveat: \starhead{} was
+\emph{noticed} for recurring in per-type top-10 lists, so this rules out
+per-type selection but not the initial noticing; independent
+confirmation comes from the causal test in Sec.~\ref{sec:gap} and the
+cross-model replication in Sec.~\ref{sec:crossmodel}, where the
+phenomenon recurs at a family-specific address (full head-by-head map in
+Appendix~\ref{app:headmap-full}).
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.66\linewidth]{fig_starhead}
+\caption{Fidelity of the fixed location \starhead{} (bars, never
+re-selected per type) against the best residual-stream read-out for
+that type (circles); margins $+0.05$ to $+0.34$. Significance ($p<0.001$
+each, $\times1024$ Bonferroni) is on the NaN-cleaned cell subset, where
+race-containing values shift slightly (RACE$\times$RELIG
+$0.31\!\to\!0.33$; RACE$\times$POLPARTY $0.56\!\to\!0.59$; exclusions in
+Appendix~\ref{app:data}).}
+\label{fig:starhead}
+\end{figure}
+
+\subsection{Heterogeneity across attribute types}
+% finding 02+05: hierarki bertahan; ras rapuh antar template
+The type hierarchy is preserved at every location tested:
+the age- and education-based types are strongly and stably encoded
+(template std $0.02$--$0.05$; RELIG$\times$POLPARTY sits between, at
+$0.10$), while every race-containing type is weaker \emph{and}
+prompt-fragile (template std $0.12$--$0.13$; e.g.,
+RACE$\times$RELIG at its best head: $\rrho=0.16$ under one template,
+$0.45$ under another). This parallels output-level findings that
+political ideology dominates persona effects \citep{socratic2025} and
+annotator-attitude findings that ideological variables outpredict raw
+demographics \citep{annotators2022}. Demographic attributes therefore
+cannot be treated as interchangeable: a persona pipeline validated on
+political or socio-economic attributes gives no warrant for race-based
+attributes, where this model's internal structure is weaker and unstable
+under paraphrase.
+
+\subsection{Cross-model replication}
+\label{sec:crossmodel}
+% Sumber: finding 12 (notebook 15 + analisis_lokal/robustness_map.py).
+% Angka: notebooks/output/15_robustness_osim_kaggle/analisis/*.csv
+% GSS (cross-institution) diputuskan DIHAPUS 2026-08-19 -> future work di
+% Limitations. Kalau mau dihidupkan lagi: fixed-location test di starhead
+% + full re-discovery lawan jarak antar-kelompok versi GSS.
+The sensitivity analyses above are internal checks; this subsection adds
+an external one: replicating the fidelity map on three checkpoints
+differing only in human-simulation training \citep{odyssim2026}---Qwen3-8B-Base,
+OSim-8B-Mid (midtrained on a 10B-token behavioral corpus), and OSim-8B
+(post-RL)---with the same prompts, cells, and pipeline, validated by
+reproducing the Mistral map from raw activations.
+\phantomsection\label{sec:robustness}
+
+\begin{table}[t]
+\centering\footnotesize
+\setlength{\tabcolsep}{3pt}
+\caption{Cross-model replication of the fidelity map. \emph{head/resid} =
+selected best head vs.\ best residual read-out. $\rrho_{\text{ho}}$ =
+held-out-template fidelity (max-statistic $p$ in parentheses,
+$2{,}000$ permutations). Mistral column: that model's held-out head
+value, for reference.}
+\label{tab:crossmodel}
+\begin{tabular}{lccccccc}
+\toprule
+& Mistral & \multicolumn{2}{c}{Qwen3-8B-Base}
+& \multicolumn{2}{c}{OSim-8B-Mid} & \multicolumn{2}{c}{OSim-8B (post-RL)}\\
+\cmidrule(lr){2-2}\cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(lr){7-8}
+Type & $\rrho_{\text{ho}}$ & head/resid & $\rrho_{\text{ho}}$ ($p$)
+& head/resid & $\rrho_{\text{ho}}$ ($p$)
+& head/resid & $\rrho_{\text{ho}}$ ($p$)\\
+\midrule
+AGE$\times$POLPARTY & 0.52 & 0.78/0.50 & 0.49\,($<$.0005) & 0.74/0.50 & 0.61\,($<$.0005) & 0.73/0.51 & 0.57\,($<$.0005) \\
+EDUCATION$\times$INCOME & 0.54 & 0.70/0.51 & 0.58\,($<$.0005) & 0.68/0.50 & 0.54\,($<$.0005) & 0.68/0.53 & 0.60\,($<$.0005) \\
+RELIG$\times$POLPARTY & 0.44 & 0.57/0.37 & 0.56\,($<$.0005) & 0.58/0.39 & 0.56\,($<$.0005) & 0.56/0.38 & 0.55\,($<$.0005) \\
+RACE$\times$POLPARTY & 0.47 & 0.60/0.37 & 0.37\,(.001) & 0.57/0.38 & 0.38\,(.002) & 0.63/0.37 & 0.46\,($<$.0005) \\
+RACE$\times$POLIDEOLOGY & 0.38 & 0.59/0.35 & 0.38\,($<$.0005) & 0.62/0.36 & 0.38\,($<$.0005) & 0.60/0.35 & 0.40\,($<$.0005) \\
+RACE$\times$RELIG & 0.29 & 0.41/0.35 & 0.29\,(.15) & 0.45/0.36 & 0.30\,(.062) & 0.43/0.33 & 0.22\,(.096) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Four results: heads dominate the residual stream here too (best head
+beats best residual in all six types at all three checkpoints, tracking
+Mistral's magnitudes, e.g.\ RELIG$\times$POLPARTY $0.56$ vs.\ $0.44$);
+the type hierarchy replicates, race weakness included (five of six types
+pass max-statistic correction at every checkpoint, $p\le0.0025$; the one
+failure, always RACE$\times$RELIG, was Mistral's weakest too); a general
+demographic-geometry head recurs at a family-specific address (L33\,H9,
+fixed across types and checkpoints, scores $\rrho=0.35$--$0.58$ in five
+types, weakest again on RACE$\times$RELIG); and ten billion tokens of
+simulation training barely move the map or the mouth (base$\to$post-RL
+held-out fidelity shifts $-0.07$ to $+0.09$ with no systematic
+direction, output accuracy changes $\le0.03$, output-RDM fidelity
+improves $0.04$)---consistent with the OdysSim authors' own caution that
+better average-human simulation does not imply better subpopulation
+simulation.
+
+The causal side does not yet replicate: patching (Sec.~\ref{sec:gap})
+has only been run on Mistral, so the map--use dissociation remains a
+one-model result.

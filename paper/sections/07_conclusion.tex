@@ -1,0 +1,23 @@
+\section{Conclusion}
+\label{sec:conclusion}
+% ------------------------------------------------------------
+% BARU: rangkuman 3 properti + implikasi + future work (lihat
+% paper/RESTRUCTURE_PLAN.md, dikerjakan Agent D).
+% ------------------------------------------------------------
+
+We asked whether a model that can be asked about a demographic group also
+faithfully represents, and actually uses, that group's opinion structure.
+The answer dissociates. Beyond established readability
+\citep{llmopinions2026}, the group geometry is \emph{faithfully arranged}
+at specific locations---selection-corrected $\rrho$ up to $0.63$---but
+only weakly \emph{causally used}: a full identity swap moves predictions
+by under $2\%$ of their error, and a linear probe on the faithful
+location lands $21$--$31\%$ closer to survey truth than the model's own
+answers, yet recovers almost no per-question ordering of groups. Readable,
+faithfully arranged, and causally used are therefore separable properties
+of the same model, and treating them as one claim is why ``can LLMs
+simulate populations?'' has stayed unresolved: a model can encode a
+faithful map of a population and still not consult it when asked. Settling
+how general this dissociation is will need cross-model causal replication
+and cross-institution ground truth beyond a single survey house
+(Sec.~\ref{sec:limitations}).

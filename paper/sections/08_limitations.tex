@@ -1,0 +1,81 @@
+\section{Limitations}
+\label{sec:limitations}
+% Jujur & spesifik — reviewer menghargai ini. Sumber: caveat di findings.
+
+\textbf{Scope of replication.} The representational findings replicate on
+three checkpoints of a second model family (Sec.~\ref{sec:crossmodel}),
+but the patching experiments---and the map-use dissociation with
+them---have so far only run on Mistral-7B; output-side near-invariance
+does replicate on an instruction-tuned Mistral (Sec.~\ref{sec:ceiling}),
+so it is not a base-model artifact. Every patch is single-layer, so
+redundant encoding across layers remains an alternative explanation for a
+null result only partially ruled out (Sec.~\ref{sec:sweep}, caveat v).
+\starhead{} itself was first noticed in per-type top-10 lists before
+being fixed for the all-type test; Sec.~\ref{sec:crossmodel} supplies a
+second-model check (L33\,H9, selection-free on five types), but a
+preregistered replication is still outstanding.
+
+\textbf{Measurement interface and contexts.} Output distributions are
+read from option-letter logits after \texttt{Answer:}---the standard
+silicon-sampling interface, but known to diverge from free-text answers
+\citep{myanswerisc2024}. Our output-side claims (Sec.~\ref{sec:gap})
+therefore scope to this interface: identity barely reaches the
+letter-probability read-out, not necessarily free-text generation, which
+we did not measure; the representation-side claims
+(Sec.~\ref{sec:act2}) do not depend on the read-out at all. Relatedly,
+the two sides are measured in different input contexts (identity-only
+vs.\ QA), and the map is measurably weaker in the QA context
+(Sec.~\ref{sec:sweep})---the fidelity--causality correlation is unchanged
+there, but our headline fidelity numbers describe an identity-only prompt
+and should be read as such.
+
+\textbf{Ground truth and sample.} All distances are measured against one
+US-centric institution, Pew ATP; cross-institution transfer (e.g.,
+scoring the map against GSS-derived inter-group distances) and
+cross-country replication (e.g., WVS, with a known language confound) are
+future work. The dissociation claim rests on six attribute types---a
+purposive sample of the 66 possible pairs among our twelve attributes
+(Sec.~\ref{sec:setup}, Appendix~\ref{app:data})---enough for two
+unambiguous counterexamples but not to generalize to intersections
+outside this set, and some cells have thin survey samples, with NaN
+pairs excluded (Appendix~\ref{app:data}). With cluster-robust inference
+the causal experiments have twelve effective units per type: enough for
+one clear result and direct between-type contrasts, not to certify a
+sweep winner against 31 rivals or estimate the fidelity--causality
+relationship precisely ($n{=}6$ types); scaling pairs, not questions, is
+the binding constraint for follow-up work.
+
+\textbf{Correlational map, one lexical encoder.} RSA fidelity is
+correlational; the patching program (Sec.~\ref{sec:v2},
+Sec.~\ref{sec:sweep}) addresses use, not the map's origin. The
+partial-fidelity control (Sec.~\ref{sec:lexical}) uses one small sentence
+encoder as the lexical baseline; static word vectors cannot represent
+several value strings (e.g.\ age ranges), so a stronger lexical model
+would only make the control stricter.
+
+\section*{Ethics Statement}
+Simulating the opinions of demographic groups is dual-use: it supports
+legitimate survey-methodology research---pilot design, non-response
+modelling, coverage checks---but the same capability can manufacture
+apparently representative public opinion, or reinforce stereotypes by
+presenting a model's guess about a group as that group's view.
+
+Our findings cut against the permissive reading: current LLM outputs are
+\emph{not} substitutes for human respondents. Under natural prompting the
+model's answers move by less than 2\% of their error when the entire
+demographic identity is replaced, and the small movement that exists is
+not reliably toward the target group's truth. The failure is also
+unequal---race-based attributes are the weakest and most prompt-fragile
+everywhere measured, so simulated outputs for racial groups are least
+trustworthy where misuse would be most harmful. We therefore caution
+against policy-adjacent uses of simulated group opinions.
+
+Interpretability results of this kind carry their own risk: a faithful
+location is a natural target for steering, and Sec.~\ref{sec:v2} shows
+naive steering through such a location can push predictions \emph{away}
+from the truth in low-fidelity types---read the map before trusting it as
+a lever.
+
+All data are public, aggregated Pew ATP response distributions with no
+personally identifiable information; no human subjects were recruited for
+this work.

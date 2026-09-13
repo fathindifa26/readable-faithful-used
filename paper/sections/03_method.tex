@@ -1,11 +1,11 @@
-\section{Setup: Two Maps and a Ruler}
+\section{Method}
 \label{sec:setup}
 % ------------------------------------------------------------
 % Sumber: notebook 07/09, simple_notes/1 (tahap0), finding 00_daftar.
 % Semua notasi didefinisikan di sini sekali, dipakai seterusnya.
 % ------------------------------------------------------------
 
-\subsection{Ground truth: inter-group opinion distances from Pew ATP}
+\subsection{Survey-side ground truth}
 % group_real_dist
 We use OpinionQA-style per-group response distributions derived from Pew
 American Trends Panel waves \citep{opinionqa2023, subpop2025} (15 waves;
@@ -15,19 +15,14 @@ religion=Hindu}), yielding $169$ cells across six attribute types
 (AGE$\times$POLPARTY, EDUCATION$\times$INCOME, RACE$\times$RELIG,
 RACE$\times$POLPARTY, RACE$\times$POLIDEOLOGY, RELIG$\times$POLPARTY).
 These six pairs are a purposive, not exhaustive, sample of the
-$\binom{12}{2}=66$ possible attribute pairs in this corpus. Two
-(RACE$\times$RELIG, RACE$\times$POLPARTY) directly instantiate a
-dimension the closest prior work names as an open question: how to
-``ensure that LLMs faithfully capture opinions along other dimensions
-that are not explored in this work, such as intersections of demographic
-identities'' \citep[p.~9]{subpop2025}---in our cell set, e.g.,
-\textit{White Mormon}, \textit{Asian Republican}. The remaining four were
-chosen to span distinct social/political axes rather than for data
-richness. By number of cells clearing the $n\geq30$ threshold, our six
-rank 7th to 44th among all 66 pairs, so selection was not biased toward
-the best-populated ones (Appendix~\ref{app:data}). The
-pairs were fixed, and the underlying cell data built, before any
-fidelity or causal result was computed on them.
+$\binom{12}{2}=66$ possible attribute pairs in this corpus, chosen to
+instantiate an intersectional dimension prior work flags as an open
+question and to span distinct social/political axes (full justification
+in Appendix~\ref{app:sixpairs}). By number of cells clearing the
+$n\geq30$ threshold, our six rank 7th to 44th among all 66 pairs, so
+selection was not biased toward the best-populated ones
+(Appendix~\ref{app:sixpairs}). The pairs were fixed, and the underlying cell
+data built, before any fidelity or causal result was computed on them.
 For groups $i,j$ the ground-truth distance is the mean Wasserstein
 distance between their answer distributions over shared questions
 (up to 300 sampled per pair):
@@ -41,8 +36,9 @@ Appendix~\ref{app:dreal-sens} reports sensitivity of the headline results
 to two construction choices: normalising WD by each question's scale
 range, and restricting to questions answered by every cell of a type.
 
-\subsection{Model-side representations at 1{,}089 locations}
+\subsection{Model-side representations and prompts}
 % notebook 09: residual 33, heads 32x32, mlp 32; hook o_proj input
+% 4 template + Tmean; jawaban ke kritik construct-validity
 For each group we build identity prompts and extract, at the final token,
 (i) the residual stream after every layer ($33$ locations), (ii) each
 attention head's output before the out-projection
@@ -57,11 +53,9 @@ the identity-swap ceiling in Sec.~\ref{sec:ceiling}. The causal
 experiments of Sec.~\ref{sec:gap} use activation patching
 \citep{meng2022rome, wang2023ioi}, following \citet{heimersheim2024} and
 mindful of documented reliability limits \citep{causalprobing2025}. The
-model-side RDM at
-location $\ell$ uses cosine distances between group representations.
+model-side RDM at location $\ell$ uses cosine distances between group
+representations.
 
-\subsection{Multi-cue prompts}
-% 4 template + Tmean; jawaban ke kritik construct-validity
 A single prompt template is a single operationalization of ``group
 identity'' \citep{constructvalidity2026}. We therefore use four templates
 per group (third-person declarative, first-person, structured profile,
@@ -85,6 +79,23 @@ We report within-type fidelity throughout: pooled correlations mix
 between-type scale differences and can both mask weak types and
 manufacture spurious gains (Sec.~\ref{sec:act1}).
 
+\subsection{Causal interventions and probes}
+\label{sec:setup-causal}
+Beyond representational geometry, we test whether outputs causally
+depend on it, with four instruments (Appendix~\ref{app:patching};
+Appendix~\ref{app:probe}). An identity-swap ceiling measures how much the
+predicted opinion distribution moves when the entire demographic
+identity is replaced, bounding how identity-responsive the output is at
+all. Activation patching at the identity token replaces a donor group's
+activations there, propagating the edit forward; our primary
+intervention jointly patches all 32 heads of layer 11. A per-layer sweep
+repeats this 32-head patch at every layer for all six types; significance
+comes from a max-statistic sign-flip permutation test over layers,
+computed at the pair level because items cluster into donor--recipient
+pairs. Finally, a linear probe fit on \starhead's 128
+activations (leave-one-cell-out) asks how much of a group's real
+response distribution is linearly recoverable from that location alone.
+
 \subsection{Statistical protection against selection}
 \label{sec:setup-selection}
 % finding 06: max-stat permutation, held-out template, split-half
@@ -99,13 +110,13 @@ selection}---locations chosen on half the cells, scored on the other half
 maxima.
 
 Two further disciplines apply to the causal experiments
-(Sec.~\ref{sec:gap}). First, patching items are \emph{clustered}: each
+(Sec.~\ref{sec:gap}). Patching items are \emph{clustered}: each
 type contributes 12 donor--recipient pairs $\times$ 20 questions, and
-items within a pair share the persona and its idiosyncrasies. All causal
-$p$-values are therefore computed at the \emph{pair} level (sign-flip
+items within a pair share the persona and its idiosyncrasies, so all
+causal $p$-values are computed at the \emph{pair} level (sign-flip
 permutation over 12 clusters, enumerated exactly;
 Appendix~\ref{app:cluster}), with item-level statistics shown only as
-descriptive detail. Second, because the survey-side ruler could itself be
+descriptive detail. And because the survey-side ruler could itself be
 confounded by lexical similarity of the identity words,
 Sec.~\ref{sec:act2} reports fidelity after partialling out a
 lexical-baseline RDM (Appendix~\ref{app:lexical}).

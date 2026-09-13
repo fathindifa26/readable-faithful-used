@@ -54,50 +54,40 @@ Independent Researcher\\
 \maketitle
 
 \begin{abstract}
-% Ditulis ulang 2026-08-18 (review D1): ~250 kata, satu angka headline per
-% hasil; statistik kausal = versi cluster-robust (pair-level).
+% Dipangkas 2026-09-13 (restrukturisasi front matter, Agent A): <=200 kata.
+% 1 kalimat motivasi + 1 metode + 3 kalimat hasil (gabung 4->3) + 1 penutup
+% tesis; semua angka headline (rho=0.63, <2%, p=0.002, 21-31%) dipertahankan.
 Large language models are widely used to simulate survey respondents, yet
-their answers are homogeneous and unfaithful to real inter-group
-differences. We ask where demographic group identity lives inside an LLM,
-how faithfully its internal geometry mirrors real inter-group opinion
-structure, and whether the model uses what it encodes. Using
-representational similarity analysis against Pew American Trends Panel
-ground truth over 169 intersectional demographic cells, we score 1{,}089
-read-out locations in Mistral-7B, then intervene causally at every layer
-in all six attribute types. Four results. (1) The standard last-token
-residual read-out understates the model: attention-head read-outs
-dominate it in five of six types and never lose, with selection-corrected
-fidelity up to $\rrho=0.63$ (split-half median)---roughly $70\%$ of the
-measurement-reliability ceiling---and the map survives partialling out
-the lexical similarity of the identity words. (2) A single head
-(\starhead) is significantly faithful in all six types as a fixed
-location, while race-based types stay weak and prompt-fragile everywhere.
-Both phenomena replicate at family-specific addresses---the analogous
-head significant in five of six types, weakest on the same race
-type---across three checkpoints of a second model family, where ten
-billion tokens of human-simulation training barely move the map.
-(3) Causal use does not follow fidelity: under cluster-robust inference
-the clearest causal pathway sits in one of the \emph{least} faithful
-types (exact $p=0.002$ at the depth fixed in advance by the map), the most faithful type
-shows no correction-surviving single-layer effect, and replacing the entire identity in the
-prompt moves predictions by under $2\%$ of their error. (4) A
-128-dimensional probe of the single head lands $21$--$31\%$ closer to
-survey truth than the model's own answers---yet recovers almost none of
-the per-question ordering of groups, no better than the answers
-themselves. Readable, faithfully arranged, and causally used are three
-dissociable properties of the same model; treating them as one claim is
-what keeps the ``can LLMs simulate populations'' debate unresolved.
+their outputs are homogeneous and unfaithful to real inter-group
+differences, and whether this reflects what a model knows or uses has
+remained untested. Using representational similarity analysis against Pew
+American Trends Panel ground truth, we score demographic read-out
+locations in Mistral-7B and intervene causally across six attribute
+types. The internal geometry is faithful: attention-head read-outs
+dominate the standard residual read-out, reaching selection-corrected
+$\rrho$ up to $0.63$---about $70\%$ of the measurement-reliability
+ceiling---and one head, \starhead, is significantly faithful across all
+six types, though race-based types stay weak and prompt-fragile,
+replicating in a second model family. Yet causal use does not track
+fidelity: the clearest causal pathway ($p=0.002$) sits in one of the
+least faithful types, the most faithful type shows no
+correction-surviving effect, and full identity swaps in the prompt move
+predictions by under $2\%$ of their error. A $128$-dimensional probe on
+that head lands $21$--$31\%$ closer to survey truth than the model's
+answers, yet recovers almost none of the per-question group ordering.
+Readable, faithfully arranged, and causally used are three dissociable
+properties of the same model; treating them as one claim is what keeps
+the ``can LLMs simulate populations'' debate unresolved.
 \end{abstract}
 
 \input{sections/01_introduction}
 \input{sections/02_related_work}
-\input{sections/03_setup}
-\input{sections/04_act1_naive_readout}
-\input{sections/05_act2_fidelity_map}
-\input{sections/06_gap}
-\input{sections/07_robustness}
-\input{sections/08_discussion}
-\input{sections/09_limitations}
+\input{sections/03_method}
+\input{sections/04_results_map}
+\input{sections/05_results_causal}
+\input{sections/06_discussion}
+\input{sections/07_conclusion}
+\input{sections/08_limitations}
 
 \section*{Reproducibility Statement}
 All experiments use the public checkpoint \texttt{mistralai/Mistral-7B-v0.1}
@@ -116,6 +106,6 @@ which we will release publicly upon publication).
 \bibliography{references}
 
 \appendix
-\input{sections/10_appendix}
+\input{sections/09_appendix}
 
 \end{document}

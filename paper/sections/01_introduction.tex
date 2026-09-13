@@ -4,19 +4,21 @@
 % Sumber: §13.1-13.3, §13.8.3, simple_notes/2 & 3.
 % Alur: (1) hook Sim2Real gap, (2) dua literatur berhenti satu langkah
 % sebelum jembatan, (3) pertanyaan kita, (4) tiga lapis, (5) kontribusi.
+% Dipangkas 2026-09-13 (restrukturisasi front matter, Agent A): <=600 kata,
+% 5 kontribusi -> 3 (lihat RESTRUCTURE_PLAN.md).
 % ------------------------------------------------------------
 
 % --- Paragraf 1: hook — simulasi survei LLM itu dipakai orang, tapi outputnya homogen
 LLMs are increasingly deployed as simulated survey respondents and human
 simulators \citep{subpop2025,odyssim2026}. Yet behavioral evidence shows
-their outputs are excessively uniform: simulated
-users are ``overly agreeable'' and ``stylistically uniform''
-\citep{sim2real2026}, opinion predictions barely differentiate demographic
-groups, and general model capability does not predict simulation fidelity
-\citep{sim2real2026}. All of this evidence is \emph{behavioral}---measured
-from the outside. Whether the failure lives in what the model
-\emph{knows} or in what it \emph{uses} has remained open, because the two
-research communities each hold only half of the required instrumentation.
+their outputs are excessively uniform: simulated users are ``overly
+agreeable'' and ``stylistically uniform'' \citep{sim2real2026}, opinion
+predictions barely differentiate demographic groups, and general model
+capability does not predict simulation fidelity \citep{sim2real2026}. This
+evidence is \emph{behavioral}---measured from the outside. Whether the
+failure lives in what the model \emph{knows} or in what it \emph{uses} has
+remained open, because the two research communities each hold only half
+of the required instrumentation.
 
 % --- Paragraf 2: dua literatur, masing-masing setengah alat (analogi MRI/kuesioner)
 Interpretability work localizes demographic and persona information inside
@@ -25,34 +27,33 @@ kimevans2025}---but validates against the model's own behavior (probe
 accuracy, steering success), never against external population ground
 truth. LLM-survey-simulation work has exactly that ground truth (real
 per-group response distributions) but treats the model as a black box.
-The experiment that requires both instruments at once---does the internal
-arrangement of groups match how those groups actually answer?---sits in
-the gap between them, and had not been run.
+The experiment that requires both instruments at once---whether the
+internal arrangement of groups matches how those groups actually
+answer---sits in the gap between them and had not been run.
 
 % --- Paragraf 3: pertanyaan riset + instrumen
 We hold both instruments at once. For 169 intersectional demographic
 cells (e.g., \textit{Asian $\times$ Hindu}, \textit{age 18--29 $\times$
-Democrat}) we compute two representational dissimilarity matrices: one
+Democrat}) we compute two representational dissimilarity matrices---one
 from real Pew ATP response distributions (Wasserstein distances between
-groups' answers), one from the model's internal representations at a given
-location, and correlate them (RSA; \citealp{kriegeskorte2008}). Applied at
-1{,}089 locations $\times$ 4 prompt operationalizations, this yields a
-\emph{fidelity map}: where inside the model does the arrangement of
-demographic groups mirror how the groups actually differ in opinion?
+groups' answers), one from the model's internal representations at a
+given location---and correlate them (RSA; \citealp{kriegeskorte2008}).
+Applied at 1{,}089 locations $\times$ 4 prompt operationalizations, this
+yields a \emph{fidelity map}: where inside the model does the arrangement
+of demographic groups mirror how the groups actually differ in opinion?
 
 % --- Paragraf 4: tiga lapis (tesis utama)
 Our results split the question ``can LLMs simulate populations?'' into
-three separable properties (we reserve the word ``layer'' for transformer
-layers):
+three separable properties (we reserve ``layer'' for transformer layers):
 \begin{enumerate}
   \item \textbf{Readable} (established by prior work): per-group opinion
         distributions can be decoded from internal activations
         \citep{llmopinions2026}.
   \item \textbf{Faithfully arranged} (this work): at specific locations,
-        including a single attention head, \starhead---the
-        \emph{inter-group geometry} mirrors real opinion structure
-        (selection-corrected $\rrho$ up to $0.63$), something per-group
-        readability neither implies nor requires.
+        including a single attention head, \starhead, the \emph{inter-group
+        geometry} mirrors real opinion structure (selection-corrected
+        $\rrho$ up to $0.63$), which per-group readability neither implies
+        nor requires.
   \item \textbf{Actually used} (this work): the faithfully arranged
         information barely flows into the model's answers---full identity
         swaps in the prompt move predictions by ${<}2\%$ of their error,
@@ -62,43 +63,38 @@ layers):
         faithful (Sec.~\ref{sec:sweep}).
 \end{enumerate}
 
-% --- Paragraf 5: kontribusi eksplisit
+% --- Paragraf 5: kontribusi eksplisit (5 butir lama -> 3)
 \paragraph{Contributions.}
 \begin{itemize}
   \item A \emph{fidelity map} of demographic identity in an LLM---to our
-        knowledge the first to score internal inter-group geometry
-        against real survey ground truth: RDM-vs-RDM comparison across
-        layers, attention heads, FFN outputs, and prompt variants, with
+        knowledge the first to score internal inter-group geometry against
+        real survey ground truth: RDM-vs-RDM comparison across layers,
+        attention heads, FFN outputs, and prompt variants, with
         winner's-curse-corrected statistics (max-statistic permutation,
-        held-out-template and split-half validation).
-  \item Identification of \starhead{} as a general demographic-geometry
-        head, significant across all six attribute types as a
-        \emph{fixed} location; and the finding that fidelity is
-        heterogeneous by type---political/socio-economic structure is
-        encoded at $\rrho$ up to $0.63$, racial$\times$religious
-        structure is weak and prompt-fragile at every location tested.
-  \item Quantification of the knowledge--behavior gap: replacing the
-        entire prompt identity moves the model's predicted distribution
-        by under $2\%$ of its prediction error in aggregate (a single
-        illustrative item is worked in Sec.~\ref{sec:gap}), and the
-        residual variation is directionally uninformative. A causal sweep
-        over all 32 layers in all six types---with cluster-robust,
-        selection-corrected inference---shows that representational
-        fidelity does not predict causal use: the clearest pathway sits in
-        a low-fidelity type, and the most faithful type shows no
-        correction-surviving single-layer pathway.
-  \item A direct measurement of what a faithful read-out buys: a probe on
-        \starhead{} alone (128 dimensions) is $21$--$31\%$ closer to
-        survey truth than the model's own answers, but recovers almost no
-        per-question group ordering. The two measure different
-        resolutions: the group map is faithful \emph{on average} and is
-        not sharp enough to say who answers what on any particular
-        question (Sec.~\ref{sec:probe}).
-  \item A reframing with practical consequences. If faithful structure
-        already exists internally, surface fine-tuning \citep{subpop2025}
-        may re-teach what the model already encodes---a candidate
-        mechanism for its known transfer failure. Reading the faithful
-        location directly is then the cheaper alternative, though our
-        probe results show it is still not a substitute for survey data
-        (Sec.~\ref{sec:probe}).
+        held-out and split-half validation)---and identifies \starhead{}
+        as a general demographic-geometry head, significant across all
+        six attribute types as a \emph{fixed} location, with fidelity
+        heterogeneous by type: political/socio-economic structure is
+        encoded at $\rrho$ up to $0.63$, while racial$\times$religious
+        structure is weak and prompt-fragile everywhere.
+  \item A dissociation of causal use from representational fidelity.
+        Replacing the entire prompt identity moves the model's predicted
+        distribution by under $2\%$ of its prediction error in aggregate
+        (Sec.~\ref{sec:gap}), and a causal sweep over all 32 layers in all
+        six types---with cluster-robust, selection-corrected
+        inference---shows that the clearest causal pathway sits in a
+        low-fidelity type while the most faithful type shows no
+        correction-surviving single-layer pathway (Sec.~\ref{sec:sweep}).
+  \item A direct measurement of what a faithful read-out buys, with a
+        practical reframing. A probe on \starhead{} alone (128 dimensions)
+        is $21$--$31\%$ closer to survey truth than the model's own
+        answers, but recovers almost no per-question group ordering: the
+        two measure different resolutions, faithful \emph{on average} but
+        not sharp enough for any single question (Sec.~\ref{sec:probe}).
+        If faithful structure already exists internally, surface
+        fine-tuning \citep{subpop2025} may re-teach what the model already
+        encodes---a candidate mechanism for its known transfer
+        failure---and reading the location directly is the cheaper
+        alternative, though our probe results show it is still not a
+        substitute for survey data.
 \end{itemize}

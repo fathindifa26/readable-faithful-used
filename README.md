@@ -80,7 +80,7 @@ ship in `results/`.
 
 ## License
 
-Code: MIT (`LICENSE`). Paper text and figures: CC BY 4.0.
+Code: MIT (`LICENSE`). Paper text and figures: CC BY 4.0 (`paper/LICENSE`).
 
 ## Citation
 
